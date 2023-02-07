@@ -85,7 +85,7 @@ export class CsvImportService {
                     if (batchCounter > batchLimit) {
                         batchCounter = 0;
                         csvReadStream.pause();
-                        this.resetAndMakeAPICall(ingestionType, ingestionName, ingestionTypeBodyArray, csvReadStream);
+                        this.resetAndMakeAPICall(ingestionType, ingestionName, ingestionTypeBodyArray, csvReadStream, false, fileTrackerPid);
                         ingestionTypeBodyArray = []
                     }
                 })
@@ -102,9 +102,9 @@ export class CsvImportService {
                         // flush the remaining csv data to API
                         if (ingestionTypeBodyArray.length > 0) {
                             batchCounter = 0;
-                            await this.resetAndMakeAPICall(ingestionType, ingestionName, ingestionTypeBodyArray, csvReadStream, true);
+                            await this.resetAndMakeAPICall(ingestionType, ingestionName, ingestionTypeBodyArray, csvReadStream, true, fileTrackerPid);
                             ingestionTypeBodyArray = undefined;
-                            const queryStr = await IngestionDatasetQuery.updateFileTracker(fileTrackerPid, 'Uploaded', ingestionName);
+                            const queryStr = await IngestionDatasetQuery.updateFileTracker(fileTrackerPid, 'Uploaded', ingestionName + '_' + fileTrackerPid);
                             await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
                         }
                     } catch (apiErr) {
@@ -122,7 +122,7 @@ export class CsvImportService {
     }
 
     async resetAndMakeAPICall(ingestionType: string, ingestionName: string, ingestionTypeBodyArray: any[],
-                              csvReadStream: ReadStream, isEnd = false) {
+                              csvReadStream: ReadStream, isEnd = false, fileTrackerPid: number) {
         let postBody: any = {};
         const url: string = process.env.URL + `/ingestion/${ingestionType}`;
         const mainKey = ingestionType + '_name';
@@ -134,6 +134,7 @@ export class CsvImportService {
         } else {
             postBody[ingestionType] = [...ingestionTypeBodyArray];
         }
+        postBody.file_tracker_pid = fileTrackerPid;
         try {
             await this.http.post(url, postBody);
             if (!isEnd) {

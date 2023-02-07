@@ -24,7 +24,11 @@ export class EventService {
                             error: isValidSchema.errors
                         }
                     } else {
-                        await this.service.writeToCSVFile(eventName, inputData.event);
+                        let fileName = eventName;
+                        if (inputData?.file_tracker_pid) {
+                            fileName = eventName + `_${inputData?.file_tracker_pid}`;
+                        }
+                        await this.service.writeToCSVFile(fileName, inputData.event);
                         return {
                             code: 200,
                             message: "Event added successfully"

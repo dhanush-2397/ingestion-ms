@@ -5,6 +5,8 @@ export class Dimension {
     dimension_name: string
     @ApiProperty()
     dimension: object[];
+    @ApiProperty()
+    file_tracker_pid: number;
 }
 
 export class IEvent {
@@ -12,13 +14,17 @@ export class IEvent {
     event_name: string
     @ApiProperty()
     event: object[];
+    @ApiProperty()
+    file_tracker_pid: number;
 }
 
 export class Dataset {
     @ApiProperty()
     dataset_name: string
     @ApiProperty()
-    dataset: any
+    dataset: any;
+    @ApiProperty()
+    file_tracker_pid: number;
 }
 
 export class Pipeline {
