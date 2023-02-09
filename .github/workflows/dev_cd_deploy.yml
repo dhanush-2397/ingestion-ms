@@ -45,5 +45,4 @@ jobs:
           docker stop ansible_ingest_app_1 || true
           docker rm ansible_ingest_app_1 || true
           docker rmi tibildocker/ingestion_ms:dev || true
-          #docker run -d --name ansible_ingest_app_1 -p 3000:3000 --network ansible_cqube_net tibildocker/ingestion_ms:dev
-          docker run -d --name ansible_ingest_app_1 -p 3000:3000 --network ansible_cqube_net -v ansible_input_volume:/app/input-files -v archived_volume:/app/archived-files -v processing_volume:/app/processing-files tibildocker/ingestion_ms:dev
+          docker run -d --name ansible_ingest_app_1 -p 3000:3000 --network ansible_cqube_net tibildocker/ingestion_ms:dev

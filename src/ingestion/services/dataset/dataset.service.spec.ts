@@ -293,8 +293,8 @@ describe('DatasetService', () => {
 
         const mockError = {
             executeQuery: jest.fn().mockImplementation(() => {
-                    throw Error("exception test")
-                })
+                throw Error("exception test")
+            })
         };
 
         const module: TestingModule = await Test.createTestingModule({
@@ -313,7 +313,7 @@ describe('DatasetService', () => {
                 }
             ],
         }).compile();
-        let localService:DatasetService = module.get<DatasetService>(DatasetService);
+        let localService: DatasetService = module.get<DatasetService>(DatasetService);
         const Datasetdto = {
             "dataset_name": "student_attendance_by_classss",
             "dataset": {
