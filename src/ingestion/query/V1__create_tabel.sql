@@ -72,7 +72,7 @@ CREATE TABLE IF NOT EXISTS ingestion.file_tracker (
   created_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   uploaded_file_name VARCHAR NOT NULL,
-  system_file_name   VARCHAR UNIQUE,
+  system_file_name   VARCHAR,
   ingestion_type     VARCHAR NOT NULL,
   ingestion_name     VARCHAR NOT NULL,
   file_status        VARCHAR NOT NULL,
