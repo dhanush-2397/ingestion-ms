@@ -7,6 +7,7 @@ import {PipelineService} from '../services/pipeline/pipeline.service';
 import {CsvImportService} from "../services/csvImport/csvImport.service";
 import {FileStatusService} from '../services/file-status/file-status.service';
 import {UpdateFileStatusService} from '../services/update-file-status/update-file-status.service';
+import { DatabaseService } from '../../database/database.service';
 
 describe('IngestionController', () => {
 
@@ -15,7 +16,7 @@ describe('IngestionController', () => {
         const module: TestingModule = await Test.createTestingModule({
             controllers: [IngestionController],
             providers: [DatasetService,
-                DimensionService, EventService, PipelineService,
+                DimensionService, EventService, PipelineService,DatabaseService,
                 {
                     provide: DatasetService,
                     useValue: {
@@ -71,7 +72,15 @@ describe('IngestionController', () => {
                             dto
                         })
                     }
-                }
+                },
+                {
+                    provide: DatabaseService,
+                    useValue: {
+                        executeQuery: jest.fn(dto => {
+                            dto
+                        })
+                    }
+                },
             ],
         }).compile();
         controller = module.get<IngestionController>(IngestionController);

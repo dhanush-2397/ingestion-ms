@@ -24,6 +24,7 @@ import {FileIsDefinedValidator} from "../validators/file-is-defined-validator";
 import {FileStatusService} from '../services/file-status/file-status.service';
 import {UpdateFileStatusService} from '../services/update-file-status/update-file-status.service';
 import {ApiConsumes,ApiTags} from '@nestjs/swagger';
+import { DatabaseService } from '../../database/database.service';
 
 @ApiTags('ingestion')
 @Controller('ingestion')
@@ -31,7 +32,20 @@ export class IngestionController {
     constructor(
         private datasetservice: DatasetService, private dimesionService: DimensionService
         , private eventService: EventService, private pipelineService: PipelineService, private csvImportService: CsvImportService
-        , private filestatus: FileStatusService, private updateFileStatus: UpdateFileStatusService) {
+        , private filestatus: FileStatusService, private updateFileStatus: UpdateFileStatusService, private databaseService: DatabaseService) {
+    }
+
+    @Post('/query')
+    async executeQuery(@Body() body: any, @Res() response: Response){
+        try {
+            let result = await this.databaseService.executeQuery( body?.query);
+            response.status(200).send(result)
+        }
+        catch(e) {
+            console.error('execute-query-impl: ', e.message);
+            response.status(500).send("Error running SQL query: " + e.message)
+            throw new Error(e);
+        }
     }
 
     @Post('/dataset')

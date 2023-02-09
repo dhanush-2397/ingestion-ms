@@ -9,7 +9,7 @@ export class DimensionService {
     constructor(private DatabaseService: DatabaseService, private service: GenericFunction) {
     }
 
-    async createDimension(inputData: Dimension) {
+    async createDimension(inputData) {
         try {
             if (inputData.dimension_name) {
                 const dimensionName = inputData.dimension_name;

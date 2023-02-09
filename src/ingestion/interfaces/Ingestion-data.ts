@@ -1,30 +1,90 @@
-import {ApiProperty} from "@nestjs/swagger";
+import { ApiProperty } from "@nestjs/swagger";
 
+export class dimesionobj {
+    @ApiProperty()
+    grade?: number
+    @ApiProperty()
+    school_id?: number
+    @ApiProperty()
+    school_name?: string
+    @ApiProperty()
+    school_type?: string
+    @ApiProperty()
+    school_category?: string
+    @ApiProperty()
+    cluster_id?: number
+    @ApiProperty()
+    cluster_name?: string
+    @ApiProperty()
+    block_id?: number
+    @ApiProperty()
+    block_name?: string
+    @ApiProperty()
+    district_id?: number
+    @ApiProperty()
+    district_name?: string
+    @ApiProperty()
+    state_id?: number
+    @ApiProperty()
+    state_name?: string
+}
 export class Dimension {
     @ApiProperty()
     dimension_name: string
-    @ApiProperty()
-    dimension: object[];
-    @ApiProperty()
-    file_tracker_pid: number;
+    @ApiProperty({ isArray: true, type: () => dimesionobj })
+    dimension: dimesionobj[];
 }
 
+export class eventObj {
+    @ApiProperty()
+    date?: string
+    @ApiProperty()
+    school_id?: string
+    @ApiProperty()
+    grade?: number
+    @ApiProperty()
+    gender?: string
+    @ApiProperty()
+    total_students?: number
+    @ApiProperty()
+    students_attendance_marked?: number
+    @ApiProperty()
+    students_attendance_present?: number
+    @ApiProperty()
+    school_category:string
+    @ApiProperty()
+    students_marked_present:number
+}
 export class IEvent {
     @ApiProperty()
     event_name: string
-    @ApiProperty()
-    event: object[];
-    @ApiProperty()
-    file_tracker_pid: number;
+    @ApiProperty({ isArray: true, type: () => eventObj })
+    event: eventObj[];
 }
 
+export class datasetobj {
+    @ApiProperty()
+    date?: string
+    @ApiProperty()
+    school_id?: number
+    @ApiProperty()
+    grade?: number
+    @ApiProperty()
+    sum_students_attendance_marked?: number
+    @ApiProperty()
+    sum_total_students?: number
+    @ApiProperty()
+    percentage?: number
+}
+export class datasetItems{
+    @ApiProperty({ isArray: true, type: () => datasetobj })
+    items:datasetobj[]
+}
 export class Dataset {
     @ApiProperty()
     dataset_name: string
     @ApiProperty()
-    dataset: any;
-    @ApiProperty()
-    file_tracker_pid: number;
+    dataset: datasetItems
 }
 
 export class Pipeline {
@@ -49,17 +109,17 @@ export class FileStatus {
 }
 
 export class CSVBody {
-    @ApiProperty({type: 'string', format: 'binary', required: true})
+    @ApiProperty({ type: 'string', format: 'binary', required: true })
     file: Express.Multer.File;
-    @ApiProperty({type: 'string'})
+    @ApiProperty({ type: 'string' })
     ingestion_type: string;
-    @ApiProperty({type: 'string'})
+    @ApiProperty({ type: 'string' })
     ingestion_name: string;
 }
 
 export class FileStatusInterface {
     @ApiProperty()
-    file_name: string;    
+    file_name: string;
     @ApiProperty()
     ingestion_type: string;
     @ApiProperty()

@@ -9,7 +9,7 @@ export class EventService {
     constructor(private DatabaseService: DatabaseService, private service: GenericFunction) {
     }
 
-    async createEvent(inputData: IEvent) {
+    async createEvent(inputData) {
         try {
             if (inputData.event_name) {
 

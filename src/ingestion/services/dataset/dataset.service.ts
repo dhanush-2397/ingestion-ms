@@ -9,7 +9,7 @@ export class DatasetService {
     constructor(private DatabaseService: DatabaseService, private service: GenericFunction) {
     }
 
-    async createDataset(inputData: Dataset) {
+    async createDataset(inputData) {
         try {
             if (inputData.dataset_name) {
                 const datasetName = inputData.dataset_name;

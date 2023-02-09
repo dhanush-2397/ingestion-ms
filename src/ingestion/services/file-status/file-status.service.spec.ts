@@ -114,10 +114,7 @@ describe('FileStatusService', () => {
 
   it("exception", async () => {
 
-    const Mockdata = {
-      file_status: "sdj"
-
-    }
+   
     const mockError = {
       executeQuery: jest.fn().mockImplementation(() => {
         throw Error("exception test")
@@ -141,7 +138,7 @@ describe('FileStatusService', () => {
     service = module.get<FileStatusService>(FileStatusService);
 
     let data = {
-      filename: "gggg",
+      filename: "gggg.csv",
       ingestion_type: "event",
       ingestion_name: "asssd"
     }
