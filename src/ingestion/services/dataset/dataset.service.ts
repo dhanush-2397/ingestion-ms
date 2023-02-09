@@ -24,11 +24,7 @@ export class DatasetService {
                                 error: isValidSchema.errors
                             }
                         } else {
-                            let fileName = datasetName;
-                            if (inputData?.file_tracker_pid) {
-                                fileName = datasetName + `_${inputData?.file_tracker_pid}`;
-                            }
-                            await this.service.writeToCSVFile(fileName, inputData.dataset["items"]);
+                            await this.service.writeToCSVFile(datasetName, inputData.dataset["items"]);
                             return {
                                 code: 200,
                                 message: "Dataset added successfully"

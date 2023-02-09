@@ -23,11 +23,7 @@ export class DimensionService {
                             error: isValidSchema.errors
                         }
                     } else {
-                        let fileName = dimensionName;
-                        if (inputData?.file_tracker_pid) {
-                            fileName = dimensionName + `_${inputData?.file_tracker_pid}`;
-                        }
-                        await this.service.writeToCSVFile(fileName, inputData.dimension);
+                        await this.service.writeToCSVFile(dimensionName, inputData.dimension);
                         return {
                             code: 200,
                             message: "Dimension added successfully"
