@@ -213,8 +213,7 @@ describe('DatasetService', () => {
                     "school_id": "6677",
                     "grade": "t"
                 }]
-            },
-            "file_tracker_pid": 1
+            }
         };
 
         let resultOutput =
@@ -232,8 +231,7 @@ describe('DatasetService', () => {
                     "school_id": 6677,
                     "grade": "t"
                 }]
-            },
-            "file_tracker_pid": 1
+            }
         };
 
         let resultOutput =
@@ -263,8 +261,7 @@ describe('DatasetService', () => {
                     "school_id": "6677",
                     "grade": "t"
                 }]
-            },
-            "file_tracker_pid": 1
+            }
         };
 
         let resultOutput =
@@ -282,8 +279,7 @@ describe('DatasetService', () => {
                     "school_id": "6677",
                     "grade": "t"
                 }]
-            },
-            "file_tracker_pid": 1
+            }
         };
 
         let resultOutput =
@@ -325,8 +321,7 @@ describe('DatasetService', () => {
                     "school_id": "6677",
                     "grade": "t"
                 }]
-            },
-            "file_tracker_pid": 1
+            }
         };
 
         let resultOutput = "Error: exception test";

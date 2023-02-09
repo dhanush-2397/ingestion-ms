@@ -75,8 +75,7 @@ describe('EventService', () => {
             "event": [{
                 "name": "jhaha",
                 "district_id": "SH123"
-            }],
-            "file_tracker_pid": 1
+            }]
         };
         let resultOutput =
             {code: 400, error: "No event found"};
@@ -88,8 +87,7 @@ describe('EventService', () => {
             "event_name": "school",
             "event": [{
                 "school_id": 6677
-            }],
-            "file_tracker_pid": 1
+            }]
         };
 
         let resultOutput =
@@ -117,8 +115,7 @@ describe('EventService', () => {
             "event": [{
                 "school_id": "6677",
                 "school_name": "test"
-            }],
-            "file_tracker_pid": 1
+            }]
         };
 
         let resultOutput =
@@ -134,8 +131,7 @@ describe('EventService', () => {
             "event": [{
                 "school_id": "6677",
                 "school_name": "test"
-            }],
-            "file_tracker_pid": 1
+            }]
         };
 
         let resultOutput =
@@ -175,8 +171,7 @@ describe('EventService', () => {
             "event": [{
                 "school_id": "6677",
                 "grade": "t"
-            }],
-            "file_tracker_pid": 1
+            }]
         };
 
         let resultOutput = "Error: exception test";

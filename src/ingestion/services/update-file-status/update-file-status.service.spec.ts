@@ -1,7 +1,7 @@
-import {Test, TestingModule} from '@nestjs/testing';
-import {DatabaseService} from '../../../database/database.service';
-import {GenericFunction} from '../generic-function';
-import {UpdateFileStatusService} from './update-file-status.service';
+import { Test, TestingModule } from '@nestjs/testing';
+import { DatabaseService } from '../../../database/database.service';
+import { GenericFunction } from '../generic-function';
+import { UpdateFileStatusService } from './update-file-status.service';
 
 describe('MyService', () => {
     let service: UpdateFileStatusService;
@@ -11,7 +11,7 @@ describe('MyService', () => {
                 {
                     provide: DatabaseService,
                     useValue: {
-                        executeQuery: jest.fn().mockReturnValueOnce([]).mockReturnValueOnce([{file_status: "Completed"}])
+                        executeQuery: jest.fn().mockReturnValueOnce([]).mockReturnValueOnce([{ file_status: "Completed" }])
                     }
                 },
                 {
@@ -67,7 +67,7 @@ describe('MyService', () => {
             "status": "Processing"
         }
 
-        let result = {code: 400, error: 'No file exists with the given details'}
+        let result = { code: 400, error: 'No file exists with the given details' }
 
         expect(await service.UpdateFileStatus(input)).toStrictEqual(result)
     });
@@ -78,7 +78,7 @@ describe('MyService', () => {
                 {
                     provide: DatabaseService,
                     useValue: {
-                        executeQuery: jest.fn().mockReturnValueOnce([{file_status: "Completed"}])
+                        executeQuery: jest.fn().mockReturnValueOnce([{ file_status: "Completed" }])
                     }
                 },
                 {
@@ -113,10 +113,7 @@ describe('MyService', () => {
                 {
                     provide: DatabaseService,
                     useValue: {
-                        executeQuery: jest.fn().mockReturnValueOnce([{
-                            file_status: "Completed",
-                            pid: 1
-                        }]).mockReturnValueOnce([]).mockReturnValueOnce([{processed_count: 1}]).mockReturnValueOnce([{dataset_count: 1}])
+                        executeQuery: jest.fn().mockReturnValueOnce([{ file_status: "Completed" , pid:1}]).mockReturnValueOnce([]).mockReturnValueOnce([{processed_count:1}]).mockReturnValueOnce([{dataset_count:1}])
                     }
                 },
                 {

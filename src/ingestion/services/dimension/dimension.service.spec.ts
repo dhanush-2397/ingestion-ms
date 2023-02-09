@@ -75,8 +75,7 @@ describe('DimensionService', () => {
             "dimension": [{
                 "name": "jhaha",
                 "district_id": "SH123"
-            }],
-            "file_tracker_pid": 1
+            }]
         };
         let resultOutput =
             {code: 400, error: "No dimension found"};
@@ -88,8 +87,7 @@ describe('DimensionService', () => {
             "dimension_name": "school",
             "dimension": [{
                 "school_id": 6677
-            }],
-            "file_tracker_pid": 1
+            }]
         };
 
         let resultOutput =
@@ -117,8 +115,7 @@ describe('DimensionService', () => {
             "dimension": [{
                 "school_id": "6677",
                 "school_name": "test"
-            }],
-            "file_tracker_pid": 1
+            }]
         };
 
         let resultOutput =
@@ -134,8 +131,7 @@ describe('DimensionService', () => {
             "dimension": [{
                 "school_id": "6677",
                 "school_name": "test"
-            }],
-            "file_tracker_pid": 1
+            }]
         };
 
         let resultOutput =
@@ -175,8 +171,7 @@ describe('DimensionService', () => {
             "dimension": [{
                 "school_id": "6677",
                 "grade": "t"
-            }],
-            "file_tracker_pid": 1
+            }]
         };
 
         let resultOutput = "Error: exception test";
