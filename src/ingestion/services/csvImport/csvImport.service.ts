@@ -63,8 +63,22 @@ export class CsvImportService {
         });
     }
 
-    async asyncProcessing(inputBody: CSVInputBodyInterface, fileCompletePath: string, fileTrackerPid: number): Promise<Result> {
-        return new Promise(async (resolve, reject) => {
+    async asyncProcessing(inputBody: CSVInputBodyInterface, fileCompletePath: string, fileTrackerPid: number) {
+        try {
+            if (inputBody.ingestion_type === 'event') {
+                let queryStr = await IngestionDatasetQuery.getPipelinePid(inputBody.ingestion_name);
+                let queryResult = await
+                    this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
+                if (queryResult.length > 0) {
+                    for (let record of queryResult) {
+                        queryStr = await
+                            IngestionDatasetQuery.createFilePipelineTracker(fileTrackerPid, record.pid);
+                        await
+                            this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
+                    }
+                }
+            }
+
             const ingestionType = inputBody.ingestion_type, ingestionName = inputBody.ingestion_name;
             const batchLimit: number = 100000;
             let batchCounter: number = 0,
@@ -95,7 +109,6 @@ export class CsvImportService {
                     fs.unlinkSync(fileCompletePath);
                     const queryStr = await IngestionDatasetQuery.updateFileTracker(fileTrackerPid, 'Error');
                     await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
-                    reject({code: 400, error: err.message});
                 })
                 .on('end', async () => {
                     try {
@@ -110,15 +123,15 @@ export class CsvImportService {
                     } catch (apiErr) {
                         let apiErrorData: any = {};
                         apiErrorData = JSON.parse(apiErr.message);
-                        const queryStr = await IngestionDatasetQuery.updateFileTracker(fileTrackerPid, 'Error');
+                        const queryStr = await IngestionDatasetQuery.updateFileTracker(fileTrackerPid, `Error ->${apiErrorData.message}`);
                         await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
-                        reject({code: 400, error: apiErrorData.message});
                     }
                     // delete the file
                     fs.unlinkSync(fileCompletePath);
-                    resolve({code: 200, message: 'CSV Uploaded Successfully'});
                 });
-        });
+        } catch (e) {
+            console.error('csvImport.service.asyncProcessing: ', e.message);
+        }
     }
 
     async resetAndMakeAPICall(ingestionType: string, ingestionName: string, ingestionTypeBodyArray: any[],

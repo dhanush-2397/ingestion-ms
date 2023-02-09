@@ -41,7 +41,10 @@ export class GenericFunction {
             this.currentlyLockedFiles[fileName] = true;
             const csv = new ObjectsToCsv(inputArray);
 
-            let response = await csv.toDisk(`./input-files/${fileName}.csv`, {append: true, allColumns: true});
+            let response = await csv.toDisk(`./input-files/${fileName}.csv`, {
+                append: true,
+                allColumns: true
+            });
             // delete the lock after writing
             delete this.currentlyLockedFiles[fileName];
             return response;
@@ -64,5 +67,18 @@ export class GenericFunction {
 
     async processSleep(time) {
         return new Promise((resolve) => setTimeout(resolve, time));
+    }
+
+    async processInput(input, schema) {
+        const {properties} = schema.items;
+        input.forEach(event => {
+            Object.keys(event).forEach(property => {
+                if (properties[property] && properties[property].type === 'string' && typeof event[property] !== 'string') {
+                    event[property] = `"${event[property]}"`;
+                }
+            });
+        });
+        console.log('generic-function.processInput: ', input);
+        return input;
     }
 }

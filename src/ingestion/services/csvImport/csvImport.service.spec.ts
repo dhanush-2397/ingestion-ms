@@ -203,12 +203,12 @@ describe('csvImportService', () => {
             }).compile();
             service = module.get<CsvImportService>(CsvImportService);
             csvReadStream.pause();
-            await service.resetAndMakeAPICall('dataset', 'student_attendance', ['school_id', 'grade', 'count'], csvReadStream, true);
+            await service.resetAndMakeAPICall('dataset', 'student_attendance', ['school_id', 'grade', 'count'], csvReadStream, true, 1);
             expect(mockHttp.post).toHaveBeenCalled();
             expect(mockCsvReadStream.destroy).not.toHaveBeenCalled();
             csvReadStream.destroy();
             // fs.unlinkSync(filePath);
-        }catch (e) {
+        } catch (e) {
             console.error('csvImport.service.spec.: ', e);
         }
 
@@ -253,14 +253,14 @@ describe('csvImportService', () => {
                 }],
         }).compile();
         let csvReadStream;
-        try{
+        try {
             csvReadStream = fs.createReadStream(file1.path);
             csvReadStream.pause();
             service = module.get<CsvImportService>(CsvImportService);
-            await expect(service.resetAndMakeAPICall('dataset', 'ingestionName', [], csvReadStream, true)).rejects.toThrowError('"API error"');
+            await expect(service.resetAndMakeAPICall('dataset', 'ingestionName', [], csvReadStream, true, 1)).rejects.toThrowError('"API error"');
             csvReadStream.destroy();
             // fs.unlinkSync(filePath1);
-        }catch (e) {
+        } catch (e) {
             console.error('csvImport.service.spec.file read err: ', e);
         }
     });
@@ -268,7 +268,7 @@ describe('csvImportService', () => {
     it('it should make an unsuccessful API call and throw an error in end', async () => {
 
         const mockHttp = {
-            post: jest.fn().mockRejectedValue({response: {data: {message:'API error'}}})
+            post: jest.fn().mockRejectedValue({response: {data: {message: 'API error'}}})
         };
         const filePath1 = createNumberOfLineCSVFile(['school_id', 'grade', 'count'], 2, 'file_unsuccessful_api_end.csv');
         let file1: Express.Multer.File = {
@@ -358,7 +358,7 @@ describe('csvImportService', () => {
         const csvReadStream = fs.createReadStream(file1.path);
         csvReadStream.pause();
         service = module.get<CsvImportService>(CsvImportService);
-        await expect(service.resetAndMakeAPICall('dataset', 'ingestionName', [], csvReadStream, false));
+        await expect(service.resetAndMakeAPICall('dataset', 'ingestionName', [], csvReadStream, false, 1));
         csvReadStream.destroy();
         // fs.unlinkSync(filePath1);
     });

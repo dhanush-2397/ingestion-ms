@@ -213,7 +213,8 @@ describe('DatasetService', () => {
                     "school_id": "6677",
                     "grade": "t"
                 }]
-            }
+            },
+            "file_tracker_pid": 1
         };
 
         let resultOutput =
@@ -231,7 +232,8 @@ describe('DatasetService', () => {
                     "school_id": 6677,
                     "grade": "t"
                 }]
-            }
+            },
+            "file_tracker_pid": 1
         };
 
         let resultOutput =
@@ -261,7 +263,8 @@ describe('DatasetService', () => {
                     "school_id": "6677",
                     "grade": "t"
                 }]
-            }
+            },
+            "file_tracker_pid": 1
         };
 
         let resultOutput =
@@ -279,7 +282,8 @@ describe('DatasetService', () => {
                     "school_id": "6677",
                     "grade": "t"
                 }]
-            }
+            },
+            "file_tracker_pid": 1
         };
 
         let resultOutput =
@@ -293,8 +297,8 @@ describe('DatasetService', () => {
 
         const mockError = {
             executeQuery: jest.fn().mockImplementation(() => {
-                    throw Error("exception test")
-                })
+                throw Error("exception test")
+            })
         };
 
         const module: TestingModule = await Test.createTestingModule({
@@ -313,7 +317,7 @@ describe('DatasetService', () => {
                 }
             ],
         }).compile();
-        let localService:DatasetService = module.get<DatasetService>(DatasetService);
+        let localService: DatasetService = module.get<DatasetService>(DatasetService);
         const Datasetdto = {
             "dataset_name": "student_attendance_by_classss",
             "dataset": {
@@ -321,7 +325,8 @@ describe('DatasetService', () => {
                     "school_id": "6677",
                     "grade": "t"
                 }]
-            }
+            },
+            "file_tracker_pid": 1
         };
 
         let resultOutput = "Error: exception test";

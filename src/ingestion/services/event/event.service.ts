@@ -28,6 +28,12 @@ export class EventService {
                         if (inputData?.file_tracker_pid) {
                             fileName = eventName + `_${inputData?.file_tracker_pid}`;
                         }
+                        let schema = queryResult[0].event_data.input.properties.event;
+                        let input = inputData.event;
+
+                        let processedInput = [];
+                        processedInput.push(await this.service.processInput(input, schema));
+                        console.log('event.service.createEvent: ', inputData.event);
                         await this.service.writeToCSVFile(fileName, inputData.event);
                         return {
                             code: 200,
