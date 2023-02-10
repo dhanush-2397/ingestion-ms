@@ -65,4 +65,16 @@ export class GenericFunction {
     async processSleep(time) {
         return new Promise((resolve) => setTimeout(resolve, time));
     }
+
+    async addQuotes(input, schema) {
+        const {properties} = schema.items;
+        input.forEach(event => {
+            Object.keys(event).forEach(property => {
+                if (properties[property] && properties[property].type === 'string') {
+                    event[property] = `'${event[property]}'`;
+                }
+            });
+        });
+        return input;
+    }
 }

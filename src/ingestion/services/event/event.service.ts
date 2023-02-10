@@ -24,7 +24,11 @@ export class EventService {
                             error: isValidSchema.errors
                         }
                     } else {
-                        await this.service.writeToCSVFile(eventName, inputData.event);
+                        let schema = queryResult[0].event_data.input.properties.event;
+                        let input = inputData.event;
+                        let processedInput = [];
+                        processedInput.push(await this.service.addQuotes(input, schema));
+                        await this.service.writeToCSVFile(eventName, processedInput[0]);
                         return {
                             code: 200,
                             message: "Event added successfully"
