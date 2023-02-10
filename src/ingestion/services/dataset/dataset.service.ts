@@ -24,7 +24,11 @@ export class DatasetService {
                                 error: isValidSchema.errors
                             }
                         } else {
-                            await this.service.writeToCSVFile(datasetName, inputData.dataset["items"]);
+                            let schema = queryResult[0].dataset_data.input.properties.dataset.properties.items;
+                            let input = inputData.dataset["items"];
+                            let processedInput = [];
+                            processedInput.push(await this.service.addQuotes(input, schema));
+                            await this.service.writeToCSVFile(datasetName, processedInput[0] );
                             return {
                                 code: 200,
                                 message: "Dataset added successfully"
