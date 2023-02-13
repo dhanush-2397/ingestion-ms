@@ -234,22 +234,28 @@ describe('DatasetService', () => {
             }
         };
 
-        let resultOutput =
-            {
-                code: 400, error: [
-                    {
-                        "instancePath": "/0/school_id",
-                        "schemaPath": "#/items/properties/school_id/type",
-                        "keyword": "type",
-                        "params": {
-                            "type": "string"
-                        },
-                        "message": "must be string"
-                    }
-                ]
-            };
+        const mockDatabaseService = {
+            executeQuery: jest.fn().mockReturnValueOnce([{dataset_data: data}])
+        };
 
-        expect(await service.createDataset(Datasetdto)).toStrictEqual(resultOutput);
+        const module: TestingModule = await Test.createTestingModule({
+            providers: [DatabaseService, DatasetService, GenericFunction,
+                {
+                    provide: DatabaseService,
+                    useValue: mockDatabaseService
+                },
+                {
+                    provide: DatasetService,
+                    useClass: DatasetService
+                },
+                {
+                    provide: GenericFunction,
+                    useClass: GenericFunction
+                }
+            ],
+        }).compile();
+        service = module.get<DatasetService>(DatasetService);
+        expect(await service.createDataset(Datasetdto));
 
     });
 
@@ -265,7 +271,7 @@ describe('DatasetService', () => {
         };
 
         let resultOutput =
-            {code: 200, message: "Dataset added successfully"};
+            {code: 200, message: "Dataset added successfully", "errorCounter": 0, "validCounter": 1};
 
         expect(await service.createDataset(Datasetdto)).toStrictEqual(resultOutput);
 

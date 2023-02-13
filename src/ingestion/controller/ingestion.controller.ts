@@ -1,4 +1,13 @@
-import {Dataset, Dimension,FileStatusInterface, CSVBody, FileStatus, IEvent, Pipeline} from '../interfaces/Ingestion-data';
+import {
+    Dataset,
+    Dimension,
+    FileStatusInterface,
+    CSVBody,
+    FileStatus,
+    IEvent,
+    Pipeline,
+    Result
+} from '../interfaces/Ingestion-data';
 import {
     Body,
     Controller, FileTypeValidator,
@@ -23,8 +32,8 @@ import {diskStorage} from "multer";
 import {FileIsDefinedValidator} from "../validators/file-is-defined-validator";
 import {FileStatusService} from '../services/file-status/file-status.service';
 import {UpdateFileStatusService} from '../services/update-file-status/update-file-status.service';
-import {ApiConsumes,ApiTags} from '@nestjs/swagger';
-import { DatabaseService } from '../../database/database.service';
+import {ApiConsumes, ApiTags} from '@nestjs/swagger';
+import {DatabaseService} from '../../database/database.service';
 
 @ApiTags('ingestion')
 @Controller('ingestion')
@@ -36,12 +45,12 @@ export class IngestionController {
     }
 
     @Post('/query')
-    async executeQuery(@Body() body: any, @Res() response: Response){
+    async executeQuery(@Body() body: any, @Res() response: Response) {
         try {
-            let result = await this.databaseService.executeQuery( body?.query);
+            let result = await this.databaseService.executeQuery(body?.query);
             response.status(200).send(result)
         }
-        catch(e) {
+        catch (e) {
             console.error('execute-query-impl: ', e.message);
             response.status(500).send("Error running SQL query: " + e.message)
             throw new Error(e);
@@ -51,11 +60,14 @@ export class IngestionController {
     @Post('/dataset')
     async createDataset(@Body() inputData: Dataset, @Res()response: Response) {
         try {
-            let result = await this.datasetservice.createDataset(inputData);
+            let result: Result = await this.datasetservice.createDataset(inputData);
             if (result.code == 400) {
                 response.status(400).send({"message": result.error});
             } else {
-                response.status(200).send({"message": result.message});
+                response.status(200).send({
+                    "message": result.message, invalid_record_count: result.errorCounter,
+                    valid_record_count: result.validCounter
+                });
             }
         }
         catch (e) {
@@ -67,11 +79,14 @@ export class IngestionController {
     @Post('/dimension')
     async createDimenshion(@Body() inputData: Dimension, @Res()response: Response) {
         try {
-            let result = await this.dimesionService.createDimension(inputData);
+            let result: Result = await this.dimesionService.createDimension(inputData);
             if (result.code == 400) {
                 response.status(400).send({"message": result.error});
             } else {
-                response.status(200).send({"message": result.message});
+                response.status(200).send({
+                    "message": result.message, invalid_record_count: result.errorCounter,
+                    valid_record_count: result.validCounter
+                });
             }
         } catch (e) {
             console.error('create-dimension-impl: ', e.message);
@@ -82,11 +97,14 @@ export class IngestionController {
     @Post('/event')
     async createEvent(@Body() inputData: IEvent, @Res()response: Response) {
         try {
-            let result = await this.eventService.createEvent(inputData);
+            let result: Result = await this.eventService.createEvent(inputData);
             if (result.code == 400) {
                 response.status(400).send({"message": result.error});
             } else {
-                response.status(200).send({"message": result.message});
+                response.status(200).send({
+                    "message": result.message, invalid_record_count: result.errorCounter,
+                    valid_record_count: result.validCounter
+                });
             }
         } catch (e) {
             console.error('create-event-impl: ', e.message);

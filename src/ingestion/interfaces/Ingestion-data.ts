@@ -1,4 +1,4 @@
-import { ApiProperty } from "@nestjs/swagger";
+import {ApiProperty} from "@nestjs/swagger";
 
 export class dimesionobj {
     @ApiProperty()
@@ -28,10 +28,11 @@ export class dimesionobj {
     @ApiProperty()
     state_name?: string
 }
+
 export class Dimension {
     @ApiProperty()
     dimension_name: string
-    @ApiProperty({ isArray: true, type: () => dimesionobj })
+    @ApiProperty({isArray: true, type: () => dimesionobj})
     dimension: dimesionobj[];
 }
 
@@ -51,14 +52,15 @@ export class eventObj {
     @ApiProperty()
     students_attendance_present?: number
     @ApiProperty()
-    school_category:string
+    school_category: string
     @ApiProperty()
-    students_marked_present:number
+    students_marked_present: number
 }
+
 export class IEvent {
     @ApiProperty()
     event_name: string
-    @ApiProperty({ isArray: true, type: () => eventObj })
+    @ApiProperty({isArray: true, type: () => eventObj})
     event: eventObj[];
 }
 
@@ -76,10 +78,12 @@ export class datasetobj {
     @ApiProperty()
     percentage?: number
 }
-export class datasetItems{
-    @ApiProperty({ isArray: true, type: () => datasetobj })
-    items:datasetobj[]
+
+export class datasetItems {
+    @ApiProperty({isArray: true, type: () => datasetobj})
+    items: datasetobj[]
 }
+
 export class Dataset {
     @ApiProperty()
     dataset_name: string
@@ -96,7 +100,9 @@ export class Pipeline {
 export interface Result {
     code: number,
     message?: string,
-    error?: string
+    error?: string,
+    errorCounter?: number,
+    validCounter?: number
 }
 
 export class FileStatus {
@@ -109,11 +115,11 @@ export class FileStatus {
 }
 
 export class CSVBody {
-    @ApiProperty({ type: 'string', format: 'binary', required: true })
+    @ApiProperty({type: 'string', format: 'binary', required: true})
     file: Express.Multer.File;
-    @ApiProperty({ type: 'string' })
+    @ApiProperty({type: 'string'})
     ingestion_type: string;
-    @ApiProperty({ type: 'string' })
+    @ApiProperty({type: 'string'})
     ingestion_name: string;
 }
 

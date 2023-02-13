@@ -36,6 +36,12 @@ interface CSVInputBodyInterface {
     ingestion_name: string;
 }
 
+interface CSVAPIResponse {
+    message: string;
+    invalid_record_count: number;
+    valid_record_count: number;
+}
+
 @Injectable()
 export class CsvImportService {
     constructor(private http: HttpCustomService, private service: GenericFunction, private DatabaseService: DatabaseService) {
@@ -68,7 +74,7 @@ export class CsvImportService {
             const ingestionType = inputBody.ingestion_type, ingestionName = inputBody.ingestion_name;
             const batchLimit: number = 100000;
             let batchCounter: number = 0,
-                ingestionTypeBodyArray: any = [];
+                ingestionTypeBodyArray: any = [], apiResponseDataList: CSVAPIResponse[] = [];
             const csvReadStream = fs.createReadStream(fileCompletePath)
                 .pipe(parse({headers: true}))
                 .on('data', (csvrow) => {
@@ -85,7 +91,7 @@ export class CsvImportService {
                     if (batchCounter > batchLimit) {
                         batchCounter = 0;
                         csvReadStream.pause();
-                        this.resetAndMakeAPICall(ingestionType, ingestionName, ingestionTypeBodyArray, csvReadStream, false);
+                        this.resetAndMakeAPICall(ingestionType, ingestionName, ingestionTypeBodyArray, csvReadStream, apiResponseDataList, false);
                         ingestionTypeBodyArray = []
                     }
                 })
@@ -101,12 +107,20 @@ export class CsvImportService {
                         // flush the remaining csv data to API
                         if (ingestionTypeBodyArray.length > 0) {
                             batchCounter = 0;
-                            await this.resetAndMakeAPICall(ingestionType, ingestionName, ingestionTypeBodyArray, csvReadStream, true);
+                            await this.resetAndMakeAPICall(ingestionType, ingestionName, ingestionTypeBodyArray, csvReadStream, apiResponseDataList, true);
                             ingestionTypeBodyArray = undefined;
                             const queryStr = await IngestionDatasetQuery.updateFileTracker(fileTrackerPid, 'Uploaded', ingestionName);
                             await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
                         }
                     } catch (apiErr) {
+                        let validObject = 0, invalidObject = 0;
+                        for (let responseData of apiResponseDataList) {
+                            invalidObject += responseData.invalid_record_count;
+                            validObject += responseData.valid_record_count;
+                        }
+                        apiResponseDataList = undefined;
+                        // delete the file
+                        fs.unlinkSync(fileCompletePath);
                         let apiErrorData: any = {};
                         apiErrorData = JSON.parse(apiErr.message);
                         const queryStr = await IngestionDatasetQuery.updateFileTracker(fileTrackerPid, `Error ->${apiErrorData.message}`);
@@ -121,7 +135,7 @@ export class CsvImportService {
     }
 
     async resetAndMakeAPICall(ingestionType: string, ingestionName: string, ingestionTypeBodyArray: any[],
-                              csvReadStream: ReadStream, isEnd = false) {
+                              csvReadStream: ReadStream, apiResponseData: CSVAPIResponse[], isEnd = false) {
         let postBody: any = {};
         const url: string = process.env.URL + `/ingestion/${ingestionType}`;
         const mainKey = ingestionType + '_name';
@@ -134,7 +148,8 @@ export class CsvImportService {
             postBody[ingestionType] = [...ingestionTypeBodyArray];
         }
         try {
-            await this.http.post(url, postBody);
+            let response = await this.http.post<CSVAPIResponse>(url, postBody);
+            apiResponseData.push(response.data);
             if (!isEnd) {
                 csvReadStream.resume();
             }
