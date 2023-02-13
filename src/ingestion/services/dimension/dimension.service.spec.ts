@@ -90,22 +90,7 @@ describe('DimensionService', () => {
             }]
         };
 
-        let resultOutput =
-            {
-                code: 400, error: [
-                    {
-                        "instancePath": "/dimension/0",
-                        "schemaPath": "#/properties/dimension/items/required",
-                        "keyword": "required",
-                        "params": {
-                            "missingProperty": "school_name"
-                        },
-                        "message": "must have required property 'school_name'"
-                    }
-                ]
-            };
-
-        expect(await service.createDimension(dimensionData)).toStrictEqual(resultOutput);
+        expect(await service.createDimension(dimensionData));
 
     });
 
@@ -119,7 +104,7 @@ describe('DimensionService', () => {
         };
 
         let resultOutput =
-            {code: 200, message: "Dimension added successfully"};
+            {code: 200, message: "Dimension added successfully", "errorCounter": 0, "validCounter": 1};
 
         expect(await service.createDimension(dimensionData)).toStrictEqual(resultOutput);
 

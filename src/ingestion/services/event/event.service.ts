@@ -2,7 +2,6 @@ import {Injectable} from '@nestjs/common';
 import {IngestionDatasetQuery} from '../../query/ingestionQuery';
 import {DatabaseService} from '../../../database/database.service';
 import {GenericFunction} from '../generic-function';
-import {IEvent} from '../../interfaces/Ingestion-data'
 
 @Injectable()
 export class EventService {
@@ -12,29 +11,47 @@ export class EventService {
     async createEvent(inputData) {
         try {
             if (inputData.event_name) {
-
                 const eventName = inputData.event_name;
                 const queryStr = await IngestionDatasetQuery.getEvents(eventName);
                 const queryResult = await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
                 if (queryResult?.length === 1) {
-                    const isValidSchema: any = await this.service.ajvValidator(queryResult[0].event_data.input, inputData);
-                    if (isValidSchema.errors) {
-                        return {
-                            code: 400,
-                            error: isValidSchema.errors
+                    let errorCounter = 0, validCounter = 0;
+                    let validArray = [], invalidArray = [];
+                    if (inputData.event && inputData.event.length > 0) {
+                        for (let record of inputData.event) {
+                            const isValidSchema: any = await this.service.ajvValidator(queryResult[0].event_data.input.properties.event.items, record);
+                            if (isValidSchema.errors) {
+                                record['description'] = isValidSchema.errors;
+                                invalidArray.push(record);
+                                errorCounter = errorCounter + 1;
+                            } else {
+                                let schema = queryResult[0].event_data.input.properties.event;
+                                validArray.push(await this.service.addQuotes(record, schema));
+                                validCounter = validCounter + 1;
+                            }
                         }
-                    } else {
-                        let schema = queryResult[0].event_data.input.properties.event;
-                        let input = inputData.event;
-                        let processedInput = [];
-                        processedInput.push(await this.service.addQuotes(input, schema));
-                        await this.service.writeToCSVFile(eventName, processedInput[0]);
+                        if (invalidArray.length > 0) {
+                            await this.service.writeToCSVFile(`./error-files/` + eventName + '_errors.csv', invalidArray);
+                        }
+                        if (validArray.length > 0) {
+                            await this.service.writeToCSVFile(`./input-files/` + eventName + '.csv', validArray);
+                        }
+                        invalidArray = undefined;
+                        validArray = undefined;
                         return {
                             code: 200,
-                            message: "Event added successfully"
+                            message: "Event added successfully",
+                            errorCounter: errorCounter,
+                            validCounter: validCounter
+                        }
+                    } else {
+                        return {
+                            code: 400,
+                            error: "Event array is required and cannot be empty"
                         }
                     }
-                } else {
+                }
+                else {
                     return {
                         code: 400,
                         error: "No event found"

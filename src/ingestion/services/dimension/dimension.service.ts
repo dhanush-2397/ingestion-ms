@@ -2,7 +2,6 @@ import {Injectable} from '@nestjs/common';
 import {IngestionDatasetQuery} from '../../query/ingestionQuery';
 import {DatabaseService} from '../../../database/database.service';
 import {GenericFunction} from '../generic-function';
-import {Dimension} from '../../interfaces/Ingestion-data'
 
 @Injectable()
 export class DimensionService {
@@ -16,21 +15,39 @@ export class DimensionService {
                 const queryStr = await IngestionDatasetQuery.getDimension(dimensionName);
                 const queryResult = await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
                 if (queryResult?.length === 1) {
-                    const isValidSchema: any = await this.service.ajvValidator(queryResult[0].dimension_data.input, inputData);
-                    if (isValidSchema.errors) {
-                        return {
-                            code: 400,
-                            error: isValidSchema.errors
+                    let errorCounter = 0, validCounter = 0;
+                    let validArray = [], invalidArray = [];
+                    if (inputData.dimension && inputData.dimension.length > 0) {
+                        for (let record of inputData.dimension) {
+                            const isValidSchema: any = await this.service.ajvValidator(queryResult[0].dimension_data.input.properties.dimension.items, record);
+                            if (isValidSchema.errors) {
+                                record['description'] = isValidSchema.errors;
+                                invalidArray.push(record);
+                                errorCounter = errorCounter + 1;
+                            } else {
+                                let schema = queryResult[0].dimension_data.input.properties.dimension;
+                                validArray.push(await this.service.addQuotes(record, schema));
+                                validCounter = validCounter + 1;
+                            }
                         }
-                    } else {
-                        let schema = queryResult[0].dimension_data.input.properties.dimension;
-                        let input = inputData.dimension;
-                        let processedInput = [];
-                        processedInput.push(await this.service.addQuotes(input, schema));
-                        await this.service.writeToCSVFile(dimensionName, processedInput[0]);
+                        if (invalidArray.length > 0) {
+                            await this.service.writeToCSVFile(`./error-files/` + dimensionName + '_errors.csv', invalidArray);
+                        }
+                        if (validArray.length > 0) {
+                            await this.service.writeToCSVFile(`./input-files/` + dimensionName + '.csv', validArray);
+                        }
+                        invalidArray = undefined;
+                        validArray = undefined;
                         return {
                             code: 200,
-                            message: "Dimension added successfully"
+                            message: "Dimension added successfully",
+                            errorCounter: errorCounter,
+                            validCounter: validCounter
+                        }
+                    } else {
+                        return {
+                            code: 400,
+                            error: "Dimension array is required and cannot be empty"
                         }
                     }
                 } else {

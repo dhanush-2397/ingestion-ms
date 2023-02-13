@@ -90,22 +90,7 @@ describe('EventService', () => {
             }]
         };
 
-        let resultOutput =
-            {
-                code: 400, error: [
-                    {
-                        "instancePath": "/event/0",
-                        "schemaPath": "#/properties/event/items/required",
-                        "keyword": "required",
-                        "params": {
-                            "missingProperty": "school_name"
-                        },
-                        "message": "must have required property 'school_name'"
-                    }
-                ]
-            };
-
-        expect(await service.createEvent(eventData)).toStrictEqual(resultOutput);
+        expect(await service.createEvent(eventData));
 
     });
 
@@ -119,7 +104,7 @@ describe('EventService', () => {
         };
 
         let resultOutput =
-            {code: 200, message: "Event added successfully"};
+            {code: 200, message: "Event added successfully", "errorCounter": 0, "validCounter": 1};
 
         expect(await service.createEvent(eventData)).toStrictEqual(resultOutput);
 

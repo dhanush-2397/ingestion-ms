@@ -41,7 +41,7 @@ export class GenericFunction {
             this.currentlyLockedFiles[fileName] = true;
             const csv = new ObjectsToCsv(inputArray);
 
-            let response = await csv.toDisk(`./input-files/${fileName}.csv`, {append: true, allColumns: true});
+            let response = await csv.toDisk(fileName, {append: true, allColumns: true});
             // delete the lock after writing
             delete this.currentlyLockedFiles[fileName];
             return response;
@@ -68,13 +68,13 @@ export class GenericFunction {
 
     async addQuotes(input, schema) {
         const {properties} = schema.items;
-        input.forEach(event => {
-            Object.keys(event).forEach(property => {
+        // input.forEach(event => {
+            Object.keys(input).forEach(property => {
                 if (properties[property] && properties[property].type === 'string') {
-                    event[property] = `'${event[property]}'`;
+                    input[property] = `'${input[property]}'`;
                 }
             });
-        });
+        // });
         return input;
     }
 }
