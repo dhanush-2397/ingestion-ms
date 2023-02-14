@@ -113,8 +113,6 @@ describe('FileStatusService', () => {
   });
 
   it("exception", async () => {
-
-   
     const mockError = {
       executeQuery: jest.fn().mockImplementation(() => {
         throw Error("exception test")
