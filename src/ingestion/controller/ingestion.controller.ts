@@ -191,19 +191,10 @@ export class IngestionController {
         }
     }
 
-    @UseInterceptors(FileInterceptor('file',))
-    @Post('/csvtojson')
-    @ApiConsumes('multipart/form-data')
-    async csvtoJson(@Res()response: Response, @UploadedFile(
-        new ParseFilePipe({
-            validators: [
-                new FileIsDefinedValidator(),
-                new FileTypeValidator({fileType: 'text/csv'}),
-            ],
-        }),
-    ) file: Express.Multer.File) {
+    @Get('/csvtojson')
+    async csvtoJson(@Res()response: Response) {
         try {
-            let result = await this.csvToJson.convertCsvToJson(file);
+            let result = await this.csvToJson.convertCsvToJson();
             if (result.code == 400) {
                 response.status(400).send({message: result.error});
             } else {
