@@ -133,3 +133,8 @@ export class FileStatusInterface {
     @ApiProperty()
     status: string;
 }
+
+export class CsvToJson {
+    @ApiProperty({ type: 'string', format: 'binary', required: true })
+    file: Express.Multer.File
+}
