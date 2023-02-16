@@ -82,7 +82,7 @@ export class CsvImportService {
                     let numberChecking: number;
                     for (let key in csvrow) {
                         numberChecking = Number(csvrow[key]);
-                        if (!key.includes('_id') && !isNaN(numberChecking)) {
+                        if (!key.includes('_id') && !key.includes('_year') && !isNaN(numberChecking)) {
                             csvrow[key] = numberChecking;
                         }
                     }
