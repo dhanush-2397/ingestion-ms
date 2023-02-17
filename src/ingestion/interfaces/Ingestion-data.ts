@@ -133,3 +133,15 @@ export class FileStatusInterface {
     @ApiProperty()
     status: string;
 }
+
+export interface InputSchema {
+    type: string;
+    items: Items;
+    shouldnotnull: boolean;
+}
+
+export interface Items {
+    type: string;
+    required: string[];
+    properties: any;
+}

@@ -2,6 +2,7 @@ import {Test, TestingModule} from '@nestjs/testing';
 import {DatasetService} from './dataset.service';
 import {GenericFunction} from '../generic-function';
 import {DatabaseService} from '../../../database/database.service';
+import * as fs from 'fs';
 
 describe('DatasetService', () => {
     let service: DatasetService;
@@ -231,7 +232,8 @@ describe('DatasetService', () => {
                     "school_id": 6677,
                     "grade": "t"
                 }]
-            }
+            },
+            "file_tracker_pid": 1
         };
 
         const mockDatabaseService = {
@@ -274,7 +276,8 @@ describe('DatasetService', () => {
             {code: 200, message: "Dataset added successfully", "errorCounter": 0, "validCounter": 1};
 
         expect(await service.createDataset(Datasetdto)).toStrictEqual(resultOutput);
-
+        fs.unlinkSync('./input-files/student_attendance_by_class.csv');
+        fs.unlinkSync('./error-files/student_attendance_by_1_errors.csv');
     });
 
     it('Dataset Name is Missing', async () => {
@@ -337,5 +340,32 @@ describe('DatasetService', () => {
         } catch (e) {
             expect(e.message).toEqual(resultOutput);
         }
+    });
+
+    it('Items array is required and cannot be empty', async () => {
+        const Datasetdto = {
+            "dataset_name": "student_attendance_by_class",
+            "dataset": {
+                "items": []
+            }
+        };
+
+        let resultOutput =
+            {code: 400, error: "Items array is required and cannot be empty"};
+
+        expect(await service.createDataset(Datasetdto)).toStrictEqual(resultOutput);
+
+    });
+
+    it('Dataset object is required', async () => {
+        const Datasetdto = {
+            "dataset_name": "student_attendance_by_class"
+        };
+
+        let resultOutput =
+            {code: 400, error: "Dataset object is required"};
+
+        expect(await service.createDataset(Datasetdto)).toStrictEqual(resultOutput);
+
     });
 });

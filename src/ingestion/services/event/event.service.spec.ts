@@ -2,6 +2,7 @@ import {Test, TestingModule} from '@nestjs/testing';
 import {GenericFunction} from '../generic-function';
 import {EventService} from './event.service';
 import {DatabaseService} from '../../../database/database.service';
+import * as fs from 'fs';
 
 describe('EventService', () => {
     let service: EventService;
@@ -100,14 +101,16 @@ describe('EventService', () => {
             "event": [{
                 "school_id": "6677",
                 "school_name": "test"
-            }]
+            }],
+            "file_tracker_pid": 1
         };
 
         let resultOutput =
             {code: 200, message: "Event added successfully", "errorCounter": 0, "validCounter": 1};
 
         expect(await service.createEvent(eventData)).toStrictEqual(resultOutput);
-
+        fs.unlinkSync('./input-files/school_1.csv');
+        fs.unlinkSync('./error-files/school_errors.csv');
     });
 
     it('Event Name is Missing', async () => {
@@ -166,5 +169,17 @@ describe('EventService', () => {
         } catch (e) {
             expect(e.message).toEqual(resultOutput);
         }
+    });
+
+    it('Event array is required and cannot be empty', async () => {
+        const Eventdto = {
+            "event_name": "student_attendance_by_class",
+            "event": []
+        };
+
+        let resultOutput =
+            {code: 400, error: "Event array is required and cannot be empty"};
+
+        expect(await service.createEvent(Eventdto)).toStrictEqual(resultOutput);
     });
 });
