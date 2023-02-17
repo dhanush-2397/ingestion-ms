@@ -3,6 +3,7 @@ import {
     Dimension,
     FileStatusInterface,
     CSVBody,
+    CsvToJson,
     FileStatus,
     IEvent,
     Pipeline,
@@ -34,6 +35,7 @@ import {FileStatusService} from '../services/file-status/file-status.service';
 import {UpdateFileStatusService} from '../services/update-file-status/update-file-status.service';
 import {ApiConsumes, ApiTags} from '@nestjs/swagger';
 import {DatabaseService} from '../../database/database.service';
+import { CsvToJsonService } from '../services/csv-to-json/csv-to-json.service';
 
 @ApiTags('ingestion')
 @Controller('ingestion')
@@ -41,7 +43,7 @@ export class IngestionController {
     constructor(
         private datasetservice: DatasetService, private dimesionService: DimensionService
         , private eventService: EventService, private pipelineService: PipelineService, private csvImportService: CsvImportService
-        , private filestatus: FileStatusService, private updateFileStatus: UpdateFileStatusService, private databaseService: DatabaseService) {
+        , private filestatus: FileStatusService, private updateFileStatus: UpdateFileStatusService, private databaseService: DatabaseService,private csvToJson:CsvToJsonService) {
     }
 
     @Post('/query')
@@ -186,6 +188,21 @@ export class IngestionController {
         catch (e) {
             console.error('ingestion.controller.updateFileStatusService: ', e.message);
             throw new Error(e);
+        }
+    }
+
+    @Get('/csvtojson')
+    async csvtoJson(@Res()response: Response) {
+        try {
+            let result = await this.csvToJson.convertCsvToJson();
+            if (result.code == 400) {
+                response.status(400).send({message: result.error});
+            } else {
+                response.status(200).send({message: result.message,data:result.response});
+            }
+        } catch (e) {
+            console.error('ingestion.controller.csvtojson: ', e);
+            response.status(400).send({message: e.error || e.message});
         }
     }
 }

@@ -163,7 +163,6 @@ describe('EventService', () => {
         };
 
         let resultOutput = "Error: exception test";
-
         try {
             await localService.createEvent(Eventdto);
         } catch (e) {

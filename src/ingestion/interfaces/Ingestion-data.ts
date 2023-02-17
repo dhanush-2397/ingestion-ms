@@ -134,6 +134,11 @@ export class FileStatusInterface {
     status: string;
 }
 
+export class CsvToJson {
+    @ApiProperty({ type: 'string', format: 'binary', required: true })
+    file: Express.Multer.File
+}
+
 export interface InputSchema {
     type: string;
     items: Items;
