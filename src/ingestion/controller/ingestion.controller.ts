@@ -39,7 +39,7 @@ import { CsvToJsonService } from '../services/csv-to-json/csv-to-json.service';
 import {GenericFunction} from '../services/generic-function';
 
 @ApiTags('ingestion')
-@Controller('ingestion')
+@Controller('')
 export class IngestionController {
     constructor(
         private datasetservice: DatasetService, private dimesionService: DimensionService
