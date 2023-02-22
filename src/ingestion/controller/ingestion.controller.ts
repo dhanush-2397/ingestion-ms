@@ -36,9 +36,10 @@ import {UpdateFileStatusService} from '../services/update-file-status/update-fil
 import {ApiConsumes, ApiTags} from '@nestjs/swagger';
 import {DatabaseService} from '../../database/database.service';
 import { CsvToJsonService } from '../services/csv-to-json/csv-to-json.service';
+import {GenericFunction} from '../services/generic-function';
 
 @ApiTags('ingestion')
-@Controller('ingestion')
+@Controller('')
 export class IngestionController {
     constructor(
         private datasetservice: DatasetService, private dimesionService: DimensionService
@@ -191,7 +192,7 @@ export class IngestionController {
         }
     }
 
-    @Get('/csvtojson')
+    @Get('/metric')
     async csvtoJson(@Res()response: Response) {
         try {
             let result = await this.csvToJson.convertCsvToJson();
