@@ -112,6 +112,7 @@ export class CsvImportService {
                             const queryStr = await IngestionDatasetQuery.updateFileTracker(fileTrackerPid, 'Uploaded', ingestionName);
                             await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
                         }
+                        fs.unlinkSync(fileCompletePath);
                     } catch (apiErr) {
                         let validObject = 0, invalidObject = 0;
                         for (let responseData of apiResponseDataList) {
@@ -120,14 +121,13 @@ export class CsvImportService {
                         }
                         apiResponseDataList = undefined;
                         // delete the file
-                        fs.unlinkSync(fileCompletePath);
                         let apiErrorData: any = {};
                         apiErrorData = JSON.parse(apiErr.message);
                         const queryStr = await IngestionDatasetQuery.updateFileTracker(fileTrackerPid, `Error ->${apiErrorData.message}`);
                         await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
+                        fs.unlinkSync(fileCompletePath);
                     }
                     // delete the file
-                    fs.unlinkSync(fileCompletePath);
                 });
         } catch (e) {
             console.error('csvImport.service.asyncProcessing: ', e.message);
@@ -137,7 +137,7 @@ export class CsvImportService {
     async resetAndMakeAPICall(ingestionType: string, ingestionName: string, ingestionTypeBodyArray: any[],
                               csvReadStream: ReadStream, apiResponseData: CSVAPIResponse[], isEnd = false) {
         let postBody: any = {};
-        const url: string = process.env.URL + `/ingestion/${ingestionType}`;
+        const url: string = process.env.URL + `/api/ingestion/${ingestionType}`;
         const mainKey = ingestionType + '_name';
         postBody[mainKey] = ingestionName;
         if (ingestionType === 'dataset') {
