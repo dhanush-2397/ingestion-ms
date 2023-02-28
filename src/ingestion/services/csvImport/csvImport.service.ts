@@ -137,7 +137,7 @@ export class CsvImportService {
     async resetAndMakeAPICall(ingestionType: string, ingestionName: string, ingestionTypeBodyArray: any[],
                               csvReadStream: ReadStream, apiResponseData: CSVAPIResponse[], isEnd = false) {
         let postBody: any = {};
-        const url: string = process.env.URL + `/api/ingestion/${ingestionType}`;
+        const url: string = process.env.URL + `/ingestion/${ingestionType}`;
         const mainKey = ingestionType + '_name';
         postBody[mainKey] = ingestionName;
         if (ingestionType === 'dataset') {
