@@ -2,6 +2,7 @@ import {Injectable} from '@nestjs/common';
 import Ajv from "ajv";
 import Ajv2019 from "ajv/dist/2019";
 import addFormats from "ajv-formats";
+import {InputSchema} from "../interfaces/Ingestion-data";
 
 const ajv = new Ajv2019();
 addFormats(ajv);
@@ -66,15 +67,17 @@ export class GenericFunction {
         return new Promise((resolve) => setTimeout(resolve, time));
     }
 
-    async addQuotes(input, schema) {
+    async formatDataToCSVBySchema(input:any, schema:InputSchema,addQuotes=true) {
         const {properties} = schema.items;
-        // input.forEach(event => {
-            Object.keys(input).forEach(property => {
-                if (properties[property] && properties[property].type === 'string') {
+        Object.keys(input).forEach(property => {
+            if (properties[property]) {
+                if (addQuotes && properties[property].type === 'string') {
                     input[property] = `'${input[property]}'`;
+                } else if (properties[property].type === 'integer' || properties[property].type === 'number'|| properties[property].type === 'float') {
+                    input[property] = Number(input[property]);
                 }
-            });
-        // });
+            }
+        });
         return input;
     }
 }

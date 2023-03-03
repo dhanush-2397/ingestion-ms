@@ -59,7 +59,7 @@ export class CsvImportService {
 
                 const queryStr = await IngestionDatasetQuery.createFileTracker(uploadedFileName, inputBody.ingestion_type, inputBody.ingestion_name, fileSize);
                 const queryResult = await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
-                if (queryResult.length === 1) {
+                if (queryResult?.length === 1) {
                     this.asyncProcessing(inputBody, fileCompletePath, queryResult[0].pid);
                     resolve({code: 200, message: 'File is being processed'})
                 } else {
@@ -70,72 +70,125 @@ export class CsvImportService {
     }
 
     async asyncProcessing(inputBody: CSVInputBodyInterface, fileCompletePath: string, fileTrackerPid: number) {
-        try {
-            const ingestionType = inputBody.ingestion_type, ingestionName = inputBody.ingestion_name;
-            const batchLimit: number = 100000;
-            let batchCounter: number = 0,
-                ingestionTypeBodyArray: any = [], apiResponseDataList: CSVAPIResponse[] = [];
-            const csvReadStream = fs.createReadStream(fileCompletePath)
-                .pipe(parse({headers: true}))
-                .on('data', (csvrow) => {
-
-                    let numberChecking: number;
-                    for (let key in csvrow) {
-                        numberChecking = Number(csvrow[key]);
-                        if (!key.includes('_id') && !key.includes('_year') && !isNaN(numberChecking)) {
-                            csvrow[key] = numberChecking;
-                        }
-                    }
-                    batchCounter++;
-                    ingestionTypeBodyArray.push({...csvrow});
-                    if (batchCounter > batchLimit) {
-                        batchCounter = 0;
-                        csvReadStream.pause();
-                        this.resetAndMakeAPICall(ingestionType, ingestionName, ingestionTypeBodyArray, csvReadStream, apiResponseDataList, false);
-                        ingestionTypeBodyArray = []
-                    }
-                })
-                .on('error', async (err) => {
-                    console.error('csvImport.service:asyncProcessing:Steam error: ', err);
-                    // delete the file
-                    fs.unlinkSync(fileCompletePath);
-                    const queryStr = await IngestionDatasetQuery.updateFileTracker(fileTrackerPid, 'Error');
-                    await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
-                })
-                .on('end', async () => {
-                    try {
-                        // flush the remaining csv data to API
-                        if (ingestionTypeBodyArray.length > 0) {
-                            batchCounter = 0;
-                            await this.resetAndMakeAPICall(ingestionType, ingestionName, ingestionTypeBodyArray, csvReadStream, apiResponseDataList, true);
-                            ingestionTypeBodyArray = undefined;
-                            const queryStr = await IngestionDatasetQuery.updateFileTracker(fileTrackerPid, 'Uploaded', ingestionName);
+        return new Promise(async (resolve,reject)=>{
+            // will not implement reject since it will be error and crash the server
+            try {
+                if (inputBody.ingestion_type === 'event') {
+                    let queryStr = await IngestionDatasetQuery.getPipelinePid(inputBody.ingestion_name);
+                    let queryResult = await
+                    this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
+                    if (queryResult?.length > 0) {
+                        for (let record of queryResult) {
+                            queryStr = await IngestionDatasetQuery.createFilePipelineTracker(fileTrackerPid, record.pid);
                             await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
                         }
-                        fs.unlinkSync(fileCompletePath);
-                    } catch (apiErr) {
-                        let validObject = 0, invalidObject = 0;
-                        for (let responseData of apiResponseDataList) {
-                            invalidObject += responseData.invalid_record_count;
-                            validObject += responseData.valid_record_count;
-                        }
-                        apiResponseDataList = undefined;
-                        // delete the file
-                        let apiErrorData: any = {};
-                        apiErrorData = JSON.parse(apiErr.message);
-                        const queryStr = await IngestionDatasetQuery.updateFileTracker(fileTrackerPid, `Error ->${apiErrorData.message}`);
-                        await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
-                        fs.unlinkSync(fileCompletePath);
                     }
-                    // delete the file
-                });
-        } catch (e) {
-            console.error('csvImport.service.asyncProcessing: ', e.message);
-        }
+                }
+
+                const ingestionType = inputBody.ingestion_type, ingestionName = inputBody.ingestion_name;
+                const batchLimit: number = 100000;
+                let batchCounter: number = 0,
+                    ingestionTypeBodyArray: any = [], apiResponseDataList: CSVAPIResponse[] = [];
+                let queryStr, queryResult, schema;
+                switch (ingestionType) {
+                    case 'event':
+                        queryStr = await IngestionDatasetQuery.getEvents(ingestionName);
+                        queryResult = await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
+                        if (queryResult?.length === 1) {
+                            schema = queryResult[0].event_data.input.properties.event;
+                        } else {
+                            const queryStr = await IngestionDatasetQuery.updateFileTracker(fileTrackerPid, `Error ->No event found`);
+                            await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
+                            resolve('Error ->No event found');
+                            return;
+                        }
+                        break;
+                    case 'dimension':
+                        queryStr = await IngestionDatasetQuery.getDimension(ingestionName);
+                        queryResult = await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
+                        if (queryResult?.length === 1) {
+                            schema = queryResult[0].dimension_data.input.properties.dimension;
+                        } else {
+                            const queryStr = await IngestionDatasetQuery.updateFileTracker(fileTrackerPid, `Error ->No dimension found`);
+                            await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
+                            resolve('Error ->No dimension found');
+                            return;
+                        }
+                        break;
+                    default:
+                        queryStr = await IngestionDatasetQuery.getDataset(ingestionName);
+                        queryResult = await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
+                        if (queryResult?.length === 1) {
+                            schema = queryResult[0].dataset_data.input.properties.dataset.properties.items;
+                        } else {
+                            const queryStr = await IngestionDatasetQuery.updateFileTracker(fileTrackerPid, `Error ->No dataset found`);
+                            await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
+                            resolve(`Error ->No dataset found`);
+                            return;
+                        }
+                }
+
+                const csvReadStream = fs.createReadStream(fileCompletePath)
+                    .pipe(parse({headers: true}))
+                    .on('data', (csvrow) => {
+                        this.service.formatDataToCSVBySchema(csvrow, schema, false);
+                        // console.log('csvImport.service.csvrow: ', csvrow , batchCounter);
+                        batchCounter++;
+                        ingestionTypeBodyArray.push({...csvrow});
+                        if (batchCounter > batchLimit) {
+                            batchCounter = 0;
+                            csvReadStream.pause();
+                            this.resetAndMakeAPICall(ingestionType, ingestionName, ingestionTypeBodyArray, csvReadStream, apiResponseDataList, false, fileTrackerPid);
+                            ingestionTypeBodyArray = []
+                        }
+                    })
+                    .on('error', async (err) => {
+                        // delete the file
+                        fs.unlinkSync(fileCompletePath);
+                        const queryStr = await IngestionDatasetQuery.updateFileTracker(fileTrackerPid, 'Error');
+                        await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
+                        resolve(`Error -> file stream error ${err}`);
+                    })
+                    .on('end', async () => {
+                        try {
+                            // flush the remaining csv data to API
+                            // console.log('csvImport.service.ingestionTypeBodyArray: ', ingestionTypeBodyArray);
+                            if (ingestionTypeBodyArray.length > 0) {
+                                batchCounter = 0;
+                                await this.resetAndMakeAPICall(ingestionType, ingestionName, ingestionTypeBodyArray, csvReadStream, apiResponseDataList, true, fileTrackerPid);
+                                ingestionTypeBodyArray = undefined;
+                                const queryStr = await IngestionDatasetQuery.updateFileTracker(fileTrackerPid, 'Uploaded', ingestionName + '_' + fileTrackerPid);
+                                await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
+                            }
+                            // delete the file
+                            fs.unlinkSync(fileCompletePath);
+                            resolve(`Success -> complete`);
+                        } catch (apiErr) {
+                            /*let validObject = 0, invalidObject = 0;
+                            console.log('csvImport.service.apiErr: ', apiResponseDataList);
+                            for (let responseData of apiResponseDataList) {
+                                invalidObject += responseData.invalid_record_count;
+                                validObject += responseData.valid_record_count;
+                            }*/
+                            apiResponseDataList = undefined;
+                            let apiErrorData: any = {};
+                            apiErrorData = JSON.parse(apiErr.message);
+                            const queryStr = await IngestionDatasetQuery.updateFileTracker(fileTrackerPid, `Error ->${apiErrorData.message}`);
+                            await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
+                            // delete the file
+                            fs.unlinkSync(fileCompletePath);
+                            resolve(`Error END -> API err ${apiErr.message}`);
+                        }
+                    });
+            } catch (e) {
+                console.error('csvImport.service.asyncProcessing: ', e.message);
+                resolve('Error -> catch error '+e.message)
+            }
+        });
     }
 
     async resetAndMakeAPICall(ingestionType: string, ingestionName: string, ingestionTypeBodyArray: any[],
-                              csvReadStream: ReadStream, apiResponseData: CSVAPIResponse[], isEnd = false) {
+                              csvReadStream: ReadStream, apiResponseData: CSVAPIResponse[], isEnd = false, fileTrackerPid: number) {
         let postBody: any = {};
         const url: string = process.env.URL + `/ingestion/${ingestionType}`;
         const mainKey = ingestionType + '_name';
@@ -147,6 +200,7 @@ export class CsvImportService {
         } else {
             postBody[ingestionType] = [...ingestionTypeBodyArray];
         }
+        postBody.file_tracker_pid = fileTrackerPid;
         try {
             let response = await this.http.post<CSVAPIResponse>(url, postBody);
             apiResponseData.push(response.data);

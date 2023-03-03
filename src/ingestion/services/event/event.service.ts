@@ -26,15 +26,19 @@ export class EventService {
                                 errorCounter = errorCounter + 1;
                             } else {
                                 let schema = queryResult[0].event_data.input.properties.event;
-                                validArray.push(await this.service.addQuotes(record, schema));
+                                validArray.push(await this.service.formatDataToCSVBySchema(record, schema));
                                 validCounter = validCounter + 1;
                             }
                         }
+                        let fileName = eventName;
+                        if (inputData?.file_tracker_pid) {
+                            fileName = eventName + `_${inputData?.file_tracker_pid}`;
+                        }
                         if (invalidArray.length > 0) {
-                            await this.service.writeToCSVFile(`./error-files/` + eventName + '_errors.csv', invalidArray);
+                            await this.service.writeToCSVFile(`./error-files/` + fileName + '_errors.csv', invalidArray);
                         }
                         if (validArray.length > 0) {
-                            await this.service.writeToCSVFile(`./input-files/` + eventName + '.csv', validArray);
+                            await this.service.writeToCSVFile(`./input-files/` + fileName + '.csv', validArray);
                         }
                         invalidArray = undefined;
                         validArray = undefined;
