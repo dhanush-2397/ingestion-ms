@@ -26,15 +26,22 @@ export class DimensionService {
                                 errorCounter = errorCounter + 1;
                             } else {
                                 let schema = queryResult[0].dimension_data.input.properties.dimension;
-                                validArray.push(await this.service.addQuotes(record, schema));
+                                validArray.push(await this.service.formatDataToCSVBySchema(record, schema));
                                 validCounter = validCounter + 1;
                             }
                         }
+
+                        let fileName = dimensionName;
+                        if (inputData?.file_tracker_pid) {
+                            fileName = dimensionName + `_${inputData?.file_tracker_pid}`;
+                        }
+
                         if (invalidArray.length > 0) {
-                            await this.service.writeToCSVFile(`./error-files/` + dimensionName + '_errors.csv', invalidArray);
+                            await this.service.writeToCSVFile(`./error-files/` + fileName + '_errors.csv', invalidArray);
                         }
                         if (validArray.length > 0) {
-                            await this.service.writeToCSVFile(`./input-files/` + dimensionName + '.csv', validArray);
+
+                            await this.service.writeToCSVFile(`./input-files/` + fileName + '.csv', validArray);
                         }
                         invalidArray = undefined;
                         validArray = undefined;

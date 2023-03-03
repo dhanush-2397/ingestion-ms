@@ -27,15 +27,20 @@ export class DatasetService {
                                     errorCounter = errorCounter + 1;
                                 } else {
                                     let schema = queryResult[0].dataset_data.input.properties.dataset.properties.items;
-                                    validArray.push(await this.service.addQuotes(record, schema));
+                                    validArray.push(await this.service.formatDataToCSVBySchema(record, schema));
                                     validCounter = validCounter + 1;
                                 }
                             }
+
+                            let fileName = datasetName;
+                            if (inputData?.file_tracker_pid) {
+                                fileName = datasetName + `_${inputData?.file_tracker_pid}`;
+                            }
                             if (invalidArray.length > 0) {
-                                await this.service.writeToCSVFile(`./error-files/` + datasetName + '_errors.csv', invalidArray);
+                                await this.service.writeToCSVFile(`./error-files/` + fileName + '_errors.csv', invalidArray);
                             }
                             if (validArray.length > 0) {
-                                await this.service.writeToCSVFile(`./input-files/` + datasetName + '.csv', validArray);
+                                await this.service.writeToCSVFile(`./input-files/` + fileName + '.csv', validArray);
                             }
                             invalidArray = undefined;
                             validArray = undefined;
@@ -55,7 +60,7 @@ export class DatasetService {
                     else {
                         return {
                             code: 400,
-                            error: "dataset object is required"
+                            error: "Dataset object is required"
                         }
                     }
                 }
