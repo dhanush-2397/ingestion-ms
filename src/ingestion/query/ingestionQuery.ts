@@ -94,7 +94,7 @@ export const IngestionDatasetQuery = {
         AND pipeline_pid = (SELECT pid
         FROM spec.pipeline
         WHERE event_pid = (SELECT pid FROM spec.event WHERE event_name = $3)
-        AND dataset_pid = (SELECT pid from spec.dataset where dataset_name = $1))
+        AND dataset_pid = (SELECT pid from spec.dataset WHERE LOWER(dataset_name) = LOWER($1)))
         RETURNING pid;`;
         return {query: queryStr, values: [datasetName, fileName, ingestionName]};
     },
