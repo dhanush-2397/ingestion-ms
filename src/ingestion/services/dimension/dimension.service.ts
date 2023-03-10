@@ -3,6 +3,8 @@ import {IngestionDatasetQuery} from '../../query/ingestionQuery';
 import {DatabaseService} from '../../../database/database.service';
 import {GenericFunction} from '../generic-function';
 
+import {uploadToS3} from '../s3-upload'
+
 @Injectable()
 export class DimensionService {
     constructor(private DatabaseService: DatabaseService, private service: GenericFunction) {
@@ -35,13 +37,16 @@ export class DimensionService {
                         if (inputData?.file_tracker_pid) {
                             fileName = dimensionName + `_${inputData?.file_tracker_pid}`;
                         }
-
+                        let file;
                         if (invalidArray.length > 0) {
-                            await this.service.writeToCSVFile(`./error-files/` + fileName + '_errors.csv', invalidArray);
+                            file = `./error-files/` + fileName + '_errors.csv';
+                            await this.service.writeToCSVFile(file, invalidArray);
+                            await uploadToS3(dimensionName, file, fileName + '_errors.csv');
                         }
                         if (validArray.length > 0) {
-
-                            await this.service.writeToCSVFile(`./input-files/` + fileName + '.csv', validArray);
+                            file = `./input-files/` + fileName + '.csv';
+                            await this.service.writeToCSVFile(file, validArray);
+                            await uploadToS3(dimensionName, file, fileName + '.csv');
                         }
                         invalidArray = undefined;
                         validArray = undefined;

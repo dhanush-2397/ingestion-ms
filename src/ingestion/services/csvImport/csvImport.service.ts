@@ -73,18 +73,6 @@ export class CsvImportService {
         return new Promise(async (resolve,reject)=>{
             // will not implement reject since it will be error and crash the server
             try {
-                if (inputBody.ingestion_type === 'event') {
-                    let queryStr = await IngestionDatasetQuery.getPipelinePid(inputBody.ingestion_name);
-                    let queryResult = await
-                    this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
-                    if (queryResult?.length > 0) {
-                        for (let record of queryResult) {
-                            queryStr = await IngestionDatasetQuery.createFilePipelineTracker(fileTrackerPid, record.pid);
-                            await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
-                        }
-                    }
-                }
-
                 const ingestionType = inputBody.ingestion_type, ingestionName = inputBody.ingestion_name;
                 const batchLimit: number = 100000;
                 let batchCounter: number = 0,
