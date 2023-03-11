@@ -15,21 +15,25 @@ minioClient.listBuckets(function (e, buckets) {
     console.log('buckets :', buckets)
 });
 
-export async function uploadToS3(bucketName, path, fileName) {
+export function uploadToS3(bucketName, file, fileName, folderName) {
     let metaData = {
         "Content-Type": lookup(fileName),
     };
 
-    minioClient.fPutObject(
-        bucketName,
-        fileName,
-        path,
-        metaData,
-        function (err, objInfo) {
-            if (err) {
-                return console.log(err); // err should be null
+    return new Promise((resolve,reject)=>{
+        minioClient.fPutObject(
+            bucketName,
+            `${folderName}/${fileName}`,
+            file,
+            metaData,
+            function (err, objInfo) {
+                if (err) {
+                    reject(err);
+                }
+                console.log("Success", objInfo);
+                resolve(objInfo);
             }
-            console.log("Success", objInfo);
-        }
-    );
+        );
+    })
+
 }

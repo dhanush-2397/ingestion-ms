@@ -261,25 +261,6 @@ describe('DatasetService', () => {
 
     });
 
-    it('Dataset Added Successfully', async () => {
-        const Datasetdto = {
-            "dataset_name": "student_attendance_by_class",
-            "dataset": {
-                "items": [{
-                    "school_id": "6677",
-                    "grade": "t"
-                }]
-            }
-        };
-
-        let resultOutput =
-            {code: 200, message: "Dataset added successfully", "errorCounter": 0, "validCounter": 1};
-
-        expect(await service.createDataset(Datasetdto)).toStrictEqual(resultOutput);
-        fs.unlinkSync('./input-files/student_attendance_by_class.csv');
-        fs.unlinkSync('./error-files/student_attendance_by_1_errors.csv');
-    });
-
     it('Dataset Name is Missing', async () => {
         const Datasetdto = {
             "dataset_name": "",

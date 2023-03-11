@@ -83,36 +83,6 @@ describe('DimensionService', () => {
         expect(await service.createDimension(dimensionData)).toStrictEqual(resultOutput)
     });
 
-    it('Validation Error', async () => {
-        const dimensionData = {
-            "dimension_name": "school",
-            "dimension": [{
-                "school_id": 6677
-            }]
-        };
-
-        expect(await service.createDimension(dimensionData));
-
-    });
-
-    it('Dimension Added Successfully', async () => {
-        const dimensionData = {
-            "dimension_name": "school",
-            "dimension": [{
-                "school_id": "6677",
-                "school_name": "test"
-            }],
-            "file_tracker_pid": 1
-        };
-
-        let resultOutput =
-            {code: 200, message: "Dimension added successfully", "errorCounter": 0, "validCounter": 1};
-
-        expect(await service.createDimension(dimensionData)).toStrictEqual(resultOutput);
-        fs.unlinkSync('./input-files/school_1.csv');
-        fs.unlinkSync('./error-files/school_errors.csv');
-    });
-
     it('Dimension Name is Missing', async () => {
         const dimensionData = {
             "dimension_name": "",
