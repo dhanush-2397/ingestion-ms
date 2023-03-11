@@ -20,7 +20,8 @@ import {
     Res,
     UploadedFile,
     UseInterceptors,
-    Put
+    Put,
+    UseGuards
 } from '@nestjs/common';
 import {DatasetService} from '../services/dataset/dataset.service';
 import {DimensionService} from '../services/dimension/dimension.service';
@@ -37,7 +38,9 @@ import {ApiConsumes, ApiTags} from '@nestjs/swagger';
 import {DatabaseService} from '../../database/database.service';
 import { CsvToJsonService } from '../services/csv-to-json/csv-to-json.service';
 import {GenericFunction} from '../services/generic-function';
-
+import { JwtGuard } from 'src/guards/jwt.guard';
+import * as jwt from 'jsonwebtoken';
+import { catchError } from 'rxjs';
 @ApiTags('ingestion')
 @Controller('')
 export class IngestionController {
@@ -45,6 +48,28 @@ export class IngestionController {
         private datasetservice: DatasetService, private dimesionService: DimensionService
         , private eventService: EventService, private pipelineService: PipelineService, private csvImportService: CsvImportService
         , private filestatus: FileStatusService, private updateFileStatus: UpdateFileStatusService, private databaseService: DatabaseService,private csvToJson:CsvToJsonService) {
+    }
+
+    @Get('generatejwt')
+    testJwt( @Res() res: Response):any {
+        let jwtSecretKey = process.env.JWT_SECRET;
+        let data = {
+            time: Date(),
+        }
+        try{
+        const token: string = jwt.sign(data, jwtSecretKey, { expiresIn: 60});
+        if(token)
+        {
+            res.status(200).send(token)
+        }
+        else{
+            res.status(400).send("Could not generate token");
+        }
+
+        }catch(error){
+            res.status(400).send("Error Ocurred");
+        }
+
     }
 
     @Post('/query')
@@ -61,6 +86,7 @@ export class IngestionController {
     }
 
     @Post('/dataset')
+    // @UseGuards(JwtGuard)
     async createDataset(@Body() inputData: Dataset, @Res()response: Response) {
         try {
             let result: Result = await this.datasetservice.createDataset(inputData);
@@ -80,6 +106,7 @@ export class IngestionController {
     }
 
     @Post('/dimension')
+    // @UseGuards(JwtGuard)
     async createDimenshion(@Body() inputData: Dimension, @Res()response: Response) {
         try {
             let result: Result = await this.dimesionService.createDimension(inputData);
@@ -98,6 +125,7 @@ export class IngestionController {
     }
 
     @Post('/event')
+    // @UseGuards(JwtGuard)
     async createEvent(@Body() inputData: IEvent, @Res()response: Response) {
         try {
             let result: Result = await this.eventService.createEvent(inputData);
@@ -137,6 +165,7 @@ export class IngestionController {
         })
     }))
     @Post('/csv')
+    // @UseGuards(JwtGuard)
     @ApiConsumes('multipart/form-data')
     async csv(@Body() body: CSVBody, @Res()response: Response, @UploadedFile(
         new ParseFilePipe({
@@ -161,6 +190,7 @@ export class IngestionController {
     }
 
     @Get('/file-status')
+    // @UseGuards(JwtGuard)
     async getFileStatus(@Query() query: FileStatus, @Res()response: Response) {
         try {
             let result: any = await this.filestatus.getFileStatus(query);
@@ -177,6 +207,7 @@ export class IngestionController {
     }
 
     @Put('/file-status')
+    // @UseGuards(JwtGuard)
     async updateFileStatusService(@Body() inputData: FileStatusInterface, @Res()response: Response) {
         try {
             let result: any = await this.updateFileStatus.UpdateFileStatus(inputData);
