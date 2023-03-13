@@ -76,6 +76,5 @@ CREATE TABLE IF NOT EXISTS ingestion.file_tracker (
   ingestion_type     VARCHAR NOT NULL,
   ingestion_name     VARCHAR NOT NULL,
   file_status        VARCHAR NOT NULL,
-  filesize           NUMERIC NOT NULL,
-  processed_count    INT DEFAULT 0
+  filesize           NUMERIC NOT NULL
 );
