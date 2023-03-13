@@ -25,26 +25,22 @@ import {
 import {DatasetService} from '../services/dataset/dataset.service';
 import {DimensionService} from '../services/dimension/dimension.service';
 import {EventService} from '../services/event/event.service';
-import {PipelineService} from '../services/pipeline/pipeline.service';
 import {Response} from 'express';
 import {CsvImportService} from "../services/csvImport/csvImport.service";
 import {FileInterceptor} from "@nestjs/platform-express";
 import {diskStorage} from "multer";
 import {FileIsDefinedValidator} from "../validators/file-is-defined-validator";
-import {FileStatusService} from '../services/file-status/file-status.service';
-import {UpdateFileStatusService} from '../services/update-file-status/update-file-status.service';
 import {ApiConsumes, ApiTags} from '@nestjs/swagger';
 import {DatabaseService} from '../../database/database.service';
 import { CsvToJsonService } from '../services/csv-to-json/csv-to-json.service';
-import {GenericFunction} from '../services/generic-function';
 
 @ApiTags('ingestion')
-@Controller('')
+@Controller('/ingestion')
 export class IngestionController {
     constructor(
         private datasetservice: DatasetService, private dimesionService: DimensionService
-        , private eventService: EventService, private pipelineService: PipelineService, private csvImportService: CsvImportService
-        , private filestatus: FileStatusService, private updateFileStatus: UpdateFileStatusService, private databaseService: DatabaseService,private csvToJson:CsvToJsonService) {
+        , private eventService: EventService, private csvImportService: CsvImportService
+        , private databaseService: DatabaseService,private csvToJson:CsvToJsonService) {
     }
 
     @Post('/query')
@@ -115,22 +111,6 @@ export class IngestionController {
         }
     }
 
-    @Post('/pipeline')
-    async pipeline(@Body() pipelineData: Pipeline, @Res()response: Response) {
-        try {
-            let result = await this.pipelineService.pipeline(pipelineData);
-            if (result.code == 400) {
-                response.status(400).send({"message": result.error});
-            } else {
-                response.status(200).send({"message": result.message});
-            }
-        }
-        catch (e) {
-            console.error('create-pipeline-impl: ', e.message);
-            throw new Error(e);
-        }
-    }
-
     @UseInterceptors(FileInterceptor('file', {
         storage: diskStorage({
             destination: './files',
@@ -157,38 +137,6 @@ export class IngestionController {
             console.error('ingestion.controller.csv: ', e);
             response.status(400).send({message: e.error || e.message});
             // throw new Error(e);
-        }
-    }
-
-    @Get('/file-status')
-    async getFileStatus(@Query() query: FileStatus, @Res()response: Response) {
-        try {
-            let result: any = await this.filestatus.getFileStatus(query);
-            if (result.code == 400) {
-                response.status(400).send({"message": result.error});
-            } else {
-                response.status(200).send({"response": result.response});
-            }
-        }
-        catch (e) {
-            console.error('get-filestatus-impl: ', e.message);
-            throw new Error(e);
-        }
-    }
-
-    @Put('/file-status')
-    async updateFileStatusService(@Body() inputData: FileStatusInterface, @Res()response: Response) {
-        try {
-            let result: any = await this.updateFileStatus.UpdateFileStatus(inputData);
-            if (result.code == 400) {
-                response.status(400).send({"message": result.error});
-            } else {
-                response.status(200).send({"message": result.message, "ready_to_archive": result.ready_to_archive});
-            }
-        }
-        catch (e) {
-            console.error('ingestion.controller.updateFileStatusService: ', e.message);
-            throw new Error(e);
         }
     }
 

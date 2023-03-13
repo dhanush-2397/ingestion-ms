@@ -97,7 +97,7 @@ describe('csvImportService', () => {
             };
             let csvImportService: CsvImportService = await defineTheModuleCompilation(mockErrHttpValue, undefined);
             expect(csvImportService.resetAndMakeAPICall('dataset', 'ingestionName',
-                [], csvReadStream, [], true, 1)).rejects.toThrowError('"API error"');
+                [], csvReadStream, [], true)).rejects.toThrowError('"API error"');
             // csvReadStream.destroy();
         } catch (e) {
             console.error('csvImport.service.spec.file read err: ', e);
@@ -121,7 +121,7 @@ describe('csvImportService', () => {
             let csvImportService: CsvImportService = await defineTheModuleCompilation(mockErrHttpValue, undefined);
             const spyResetAndMakeAPICall = jest.spyOn(csvImportService, 'resetAndMakeAPICall');
             csvImportService.resetAndMakeAPICall('dataset', 'ingestionName',
-                [], csvReadStream, [], false, 1);
+                [], csvReadStream, [], false);
             expect(spyResetAndMakeAPICall).toHaveBeenCalled();
         } catch (e) {
             console.error('csvImport.service.spec.file read err: ', e);
@@ -145,7 +145,7 @@ describe('csvImportService', () => {
             let csvImportService: CsvImportService = await defineTheModuleCompilation(mockHttp, undefined);
             const spyResetAndMakeAPICall = jest.spyOn(csvImportService, 'resetAndMakeAPICall');
             csvImportService.resetAndMakeAPICall('event', 'student_attendance',
-                ['school_id', 'grade', 'count'], csvReadStream, [], false, 1);
+                ['school_id', 'grade', 'count'], csvReadStream, [], false);
             expect(spyResetAndMakeAPICall).toHaveBeenCalled();
         } catch (e) {
             console.error('csvImport.service.spec.file read err: ', e);
@@ -166,7 +166,7 @@ describe('csvImportService', () => {
         let csvImportService: CsvImportService = await defineTheModuleCompilation(undefined, undefined);
         try {
             const spyAsyncProcessing = jest.spyOn(csvImportService, 'asyncProcessing');
-            await csvImportService.asyncProcessing(inputData, file.path, 1);
+            await csvImportService.asyncProcessing(inputData, file.path);
             expect(spyAsyncProcessing).toHaveBeenCalled();
             // await expect().toHaveBeenCalled()
         } catch (e) {
@@ -185,7 +185,7 @@ describe('csvImportService', () => {
         let csvImportService: CsvImportService = await defineTheModuleCompilation(undefined, undefined);
         try {
             const spyAsyncProcessing = jest.spyOn(csvImportService, 'asyncProcessing');
-            await csvImportService.asyncProcessing(inputData, file.path, 1);
+            await csvImportService.asyncProcessing(inputData, file.path);
             expect(spyAsyncProcessing).toHaveBeenCalled();
             // await expect().toHaveBeenCalled()
         } catch (e) {
@@ -204,7 +204,7 @@ describe('csvImportService', () => {
         let csvImportService: CsvImportService = await defineTheModuleCompilation(undefined, undefined);
         try {
             const spyAsyncProcessing = jest.spyOn(csvImportService, 'asyncProcessing');
-            await csvImportService.asyncProcessing(inputData, file.path, 1);
+            await csvImportService.asyncProcessing(inputData, file.path);
             expect(spyAsyncProcessing).toHaveBeenCalled();
             // await expect().toHaveBeenCalled()
         } catch (e) {
@@ -228,7 +228,7 @@ describe('csvImportService', () => {
         };
         let csvImportService: CsvImportService = await defineTheModuleCompilation(mockPostCall, mockDbCall);
         try {
-            await expect(csvImportService.asyncProcessing(inputData, file.path, 1)).resolves.toStrictEqual('Success -> complete');
+            await expect(csvImportService.asyncProcessing(inputData, file.path)).resolves.toStrictEqual('Success -> complete');
         } catch (e) {
             console.error('csvImport.service.spec.: ', e.message);
         } finally {
@@ -250,7 +250,7 @@ describe('csvImportService', () => {
         };
         let csvImportService: CsvImportService = await defineTheModuleCompilation(mockPostCall, mockDbCall);
         try {
-            await expect(csvImportService.asyncProcessing(inputData, file.path, 1)).resolves.toStrictEqual('Success -> complete');
+            await expect(csvImportService.asyncProcessing(inputData, file.path)).resolves.toStrictEqual('Success -> complete');
         } catch (e) {
             console.error('csvImport.service.spec.: ', e.message);
         } finally {
@@ -272,7 +272,7 @@ describe('csvImportService', () => {
         };
         let csvImportService: CsvImportService = await defineTheModuleCompilation(mockPostCall, mockDbCall);
         try {
-            await expect(csvImportService.asyncProcessing(inputData, file.path, 1)).resolves.toStrictEqual('Success -> complete');
+            await expect(csvImportService.asyncProcessing(inputData, file.path)).resolves.toStrictEqual('Success -> complete');
         } catch (e) {
             console.error('csvImport.service.spec.: ', e.message);
         } finally {
@@ -294,7 +294,7 @@ describe('csvImportService', () => {
         };
         let csvImportService: CsvImportService = await defineTheModuleCompilation(mockPostCall, mockDbCall);
         try {
-            await expect(csvImportService.asyncProcessing(inputData, file.path, 1)).resolves.toStrictEqual('Error END -> API err "API3 error"')
+            await expect(csvImportService.asyncProcessing(inputData, file.path)).resolves.toStrictEqual('Error END -> API err "API3 error"')
         } catch (e) {
             console.error('csvImport.service.spec.: ', e.message);
         } finally {
@@ -314,7 +314,7 @@ describe('csvImportService', () => {
 
         let csvImportService: CsvImportService = await defineTheModuleCompilation(undefined, mockDbCall);
         try {
-            await expect(csvImportService.asyncProcessing(inputData, file.path, 1))
+            await expect(csvImportService.asyncProcessing(inputData, file.path))
                 .resolves.toStrictEqual('Error -> catch error DB connection fail')
         } catch (e) {
             console.error('csvImport.service.spec.: ', e.message);
@@ -352,7 +352,7 @@ describe('csvImportService', () => {
                 post: jest.fn().mockReturnValue({data: {code: 200, message: 'success'}})
             };
             let csvImportService: CsvImportService = await defineTheModuleCompilation(mockPostCall, mockDbCall);
-            await expect(csvImportService.asyncProcessing(inputData, file.path, 1)).resolves.toStrictEqual('Error -> file stream error Error: Test stream error');
+            await expect(csvImportService.asyncProcessing(inputData, file.path)).resolves.toStrictEqual('Error -> file stream error Error: Test stream error');
             expect(fs.createReadStream).toBeCalledTimes(1);
             expect(mReadStream.pipe).toBeCalledTimes(1);
             expect(mReadStream.on).toBeCalledWith('error', expect.any(Function));

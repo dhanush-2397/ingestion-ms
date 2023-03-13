@@ -141,7 +141,7 @@ export class CsvToJson {
 
 export interface InputSchema {
     type: string;
-    items: Items;
+    properties: Items;
     shouldnotnull: boolean;
 }
 
