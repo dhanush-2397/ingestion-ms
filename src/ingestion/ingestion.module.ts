@@ -8,11 +8,13 @@ import {DimensionService} from './services/dimension/dimension.service';
 import {EventService} from './services/event/event.service';
 import {GenericFunction} from './services/generic-function';
 import {CsvImportService} from "./services/csvImport/csvImport.service";
-import { CsvToJsonService } from './services/csv-to-json/csv-to-json.service';
+import {FileStatusService} from './services/file-status/file-status.service';
+import {UpdateFileStatusService} from "./services/update-file-status/update-file-status.service";
+import {CsvToJsonService} from './services/csv-to-json/csv-to-json.service';
 
 @Module({
     controllers: [IngestionController],
-    providers: [DatasetService, DimensionService, EventService, GenericFunction, HttpCustomService, CsvImportService, CsvToJsonService],
+    providers: [DatasetService, DimensionService, EventService, GenericFunction, HttpCustomService, CsvImportService, FileStatusService, UpdateFileStatusService, CsvToJsonService],
     imports: [DatabaseModule, HttpModule]
 })
 export class IngestionModule {

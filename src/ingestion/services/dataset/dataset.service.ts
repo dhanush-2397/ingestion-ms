@@ -35,17 +35,20 @@ export class DatasetService {
                             }
                             let file;
                             let fileName = datasetName;
+                            if (inputData?.file_tracker_pid) {
+                                fileName = datasetName + `_${inputData?.file_tracker_pid}`;
+                            }
                             let folderName = await this.service.getDate();
                             if (invalidArray.length > 0) {
                                 file = `./error-files/` + fileName + '_errors.csv';
                                 await this.service.writeToCSVFile(file, invalidArray);
-                                await uploadToS3(`${process.env.ERROR_BUCKET}`, file, fileName + '_errors.csv', folderName);
+                                await uploadToS3(`${process.env.ERROR_BUCKET}`, file, fileName + '_errors.csv', `${datasetName}/${folderName}`);
                                 await this.service.deleteLocalFile(file);
                             }
                             if (validArray.length > 0) {
                                 file = `./input-files/` + fileName + '.csv';
                                 await this.service.writeToCSVFile(file, validArray);
-                                await uploadToS3(`${process.env.INPUT_BUCKET}`, file, fileName + '.csv', folderName);
+                                await uploadToS3(`${process.env.INPUT_BUCKET}`, file, fileName + '.csv', `${datasetName}/${folderName}`);
                                 await this.service.deleteLocalFile(file);
                             }
                             invalidArray = undefined;

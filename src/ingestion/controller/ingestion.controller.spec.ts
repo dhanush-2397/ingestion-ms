@@ -4,8 +4,10 @@ import {DatasetService} from '../services/dataset/dataset.service';
 import {DimensionService} from '../services/dimension/dimension.service';
 import {EventService} from '../services/event/event.service';
 import {CsvImportService} from "../services/csvImport/csvImport.service";
-import { DatabaseService } from '../../database/database.service';
-import { CsvToJsonService } from '../services/csv-to-json/csv-to-json.service';
+import {FileStatusService} from '../services/file-status/file-status.service';
+import {UpdateFileStatusService} from '../services/update-file-status/update-file-status.service';
+import {DatabaseService} from '../../database/database.service';
+import {CsvToJsonService} from '../services/csv-to-json/csv-to-json.service';
 
 describe('IngestionController', () => {
 
@@ -43,6 +45,21 @@ describe('IngestionController', () => {
                     provide: CsvImportService,
                     useValue: {
                         readAndParseFile: jest.fn(dto => {
+                            dto
+                        })
+                    }
+                }, {
+                    provide: FileStatusService,
+                    useValue: {
+                        FileStatusService: jest.fn(dto => {
+                            dto
+                        })
+                    }
+                },
+                {
+                    provide: UpdateFileStatusService,
+                    useValue: {
+                        UpdateFileStatusService: jest.fn(dto => {
                             dto
                         })
                     }

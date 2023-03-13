@@ -19,8 +19,7 @@ export function uploadToS3(bucketName, file, fileName, folderName) {
     let metaData = {
         "Content-Type": lookup(fileName),
     };
-
-    return new Promise((resolve,reject)=>{
+    return new Promise((resolve, reject) => {
         minioClient.fPutObject(
             bucketName,
             `${folderName}/${fileName}`,

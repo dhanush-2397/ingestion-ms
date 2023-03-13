@@ -53,7 +53,7 @@ export const IngestionDatasetQuery = {
         const queryStr = `UPDATE ingestion.file_tracker
             SET file_status = $2,
             updated_at = CURRENT_TIMESTAMP
-            WHERE pid = $1;`;
+            WHERE pid = $1 RETURNING pid;`;
         return {query: queryStr, values: [pid, fileStatus]};
     },
     async updateFileProcessedCount(pid) {

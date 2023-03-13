@@ -34,18 +34,21 @@ export class DimensionService {
                         }
 
                         let fileName = dimensionName;
+                        if (inputData?.file_tracker_pid) {
+                            fileName = dimensionName + `_${inputData?.file_tracker_pid}`;
+                        }
                         let file;
                         let folderName = await this.service.getDate();
                         if (invalidArray.length > 0) {
                             file = `./error-files/` + fileName + '_errors.csv';
                             await this.service.writeToCSVFile(file, invalidArray);
-                            await uploadToS3(`${process.env.ERROR_BUCKET}`, file, fileName + '_errors.csv', folderName);
+                            await uploadToS3(`${process.env.ERROR_BUCKET}`, file, fileName + '_errors.csv', `${dimensionName}/${folderName}`);
                             await this.service.deleteLocalFile(file);
                         }
                         if (validArray.length > 0) {
                             file = `./input-files/` + fileName + '.csv';
                             await this.service.writeToCSVFile(file, validArray);
-                            await uploadToS3(`${process.env.INPUT_BUCKET}`, file, fileName + '.csv', folderName);
+                            await uploadToS3(`${process.env.INPUT_BUCKET}`, file, fileName + '.csv', `${dimensionName}/${folderName}`);
                             await this.service.deleteLocalFile(file);
                         }
                         invalidArray = undefined;
