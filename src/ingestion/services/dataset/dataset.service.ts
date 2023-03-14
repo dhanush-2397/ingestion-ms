@@ -42,7 +42,7 @@ export class DatasetService {
                             if (invalidArray.length > 0) {
                                 file = `./error-files/` + fileName + '_errors.csv';
                                 await this.service.writeToCSVFile(file, invalidArray);
-                                await uploadToS3(`${process.env.ERROR_BUCKET}`, file, fileName + '_errors.csv', `${datasetName}/${folderName}`);
+                                await uploadToS3(`${process.env.INGESTION_ERROR_BUCKET}`, file, fileName + '_errors.csv', `${datasetName}/${folderName}`);
                                 await this.service.deleteLocalFile(file);
                             }
                             if (validArray.length > 0) {
