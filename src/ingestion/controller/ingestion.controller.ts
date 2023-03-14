@@ -57,7 +57,7 @@ export class IngestionController {
             time: Date(),
         }
         try{
-        const token: string = jwt.sign(data, jwtSecretKey, { expiresIn: 60});
+        const token: string = jwt.sign(data, jwtSecretKey);
         if(token)
         {
             res.status(200).send(token)
@@ -86,7 +86,7 @@ export class IngestionController {
     }
 
     @Post('/dataset')
-    // @UseGuards(JwtGuard)
+    @UseGuards(JwtGuard)
     async createDataset(@Body() inputData: Dataset, @Res()response: Response) {
         try {
             let result: Result = await this.datasetservice.createDataset(inputData);
@@ -106,7 +106,7 @@ export class IngestionController {
     }
 
     @Post('/dimension')
-    // @UseGuards(JwtGuard)
+    @UseGuards(JwtGuard)
     async createDimenshion(@Body() inputData: Dimension, @Res()response: Response) {
         try {
             let result: Result = await this.dimesionService.createDimension(inputData);
@@ -125,7 +125,7 @@ export class IngestionController {
     }
 
     @Post('/event')
-    // @UseGuards(JwtGuard)
+    @UseGuards(JwtGuard)
     async createEvent(@Body() inputData: IEvent, @Res()response: Response) {
         try {
             let result: Result = await this.eventService.createEvent(inputData);
@@ -165,7 +165,7 @@ export class IngestionController {
         })
     }))
     @Post('/csv')
-    // @UseGuards(JwtGuard)
+    @UseGuards(JwtGuard)
     @ApiConsumes('multipart/form-data')
     async csv(@Body() body: CSVBody, @Res()response: Response, @UploadedFile(
         new ParseFilePipe({
@@ -190,7 +190,7 @@ export class IngestionController {
     }
 
     @Get('/file-status')
-    // @UseGuards(JwtGuard)
+    @UseGuards(JwtGuard)
     async getFileStatus(@Query() query: FileStatus, @Res()response: Response) {
         try {
             let result: any = await this.filestatus.getFileStatus(query);
@@ -207,7 +207,7 @@ export class IngestionController {
     }
 
     @Put('/file-status')
-    // @UseGuards(JwtGuard)
+    @UseGuards(JwtGuard)
     async updateFileStatusService(@Body() inputData: FileStatusInterface, @Res()response: Response) {
         try {
             let result: any = await this.updateFileStatus.UpdateFileStatus(inputData);
