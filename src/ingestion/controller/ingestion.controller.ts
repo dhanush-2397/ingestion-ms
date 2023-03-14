@@ -7,7 +7,7 @@ import {
     FileStatus,
     IEvent,
     Pipeline,
-    Result
+    Result, EmissionBody
 } from '../interfaces/Ingestion-data';
 import {
     Body,
@@ -35,6 +35,8 @@ import {UpdateFileStatusService} from '../services/update-file-status/update-fil
 import {ApiConsumes, ApiTags} from '@nestjs/swagger';
 import {DatabaseService} from '../../database/database.service';
 import {CsvToJsonService} from '../services/csv-to-json/csv-to-json.service';
+import {DataEmissionService} from '../services/data-emission/data-emission.service';
+import {V4DataEmissionService} from "../services/v4-data-emission/v4-data-emission.service";
 
 @ApiTags('ingestion')
 @Controller('/ingestion')
@@ -42,7 +44,7 @@ export class IngestionController {
     constructor(
         private datasetService: DatasetService, private dimensionService: DimensionService
         , private eventService: EventService, private csvImportService: CsvImportService, private fileStatus: FileStatusService, private updateFileStatus: UpdateFileStatusService,
-        private databaseService: DatabaseService, private csvToJson: CsvToJsonService) {
+        private databaseService: DatabaseService, private csvToJson: CsvToJsonService, private dataEmissionService: DataEmissionService, private v4DataEmissionService: V4DataEmissionService) {
     }
 
     @Post('/query')
@@ -188,4 +190,46 @@ export class IngestionController {
             response.status(400).send({message: e.error || e.message});
         }
     }
+
+    @UseInterceptors(FileInterceptor('file', {
+        storage: diskStorage({
+            destination: './emission-files',
+            filename: (req, file, cb) => {
+                cb(null, `${file.originalname}`);
+            }
+        })
+    }))
+    @Post('/data-emission')
+    @ApiConsumes('multipart/form-data')
+    async uploadFile(@Body() body: EmissionBody, @Res()response: Response, @UploadedFile(
+        new ParseFilePipe({
+            validators: [
+                new FileIsDefinedValidator(),
+                new FileTypeValidator({fileType: 'zip'}),
+            ],
+        }),
+    ) file: Express.Multer.File) {
+        try {
+            let result = await this.dataEmissionService.readAndParseFile(file);
+            if (result.code == 400) {
+                response.status(400).send({message: result.error});
+            } else {
+                response.status(200).send({message: result.message});
+            }
+        } catch (e) {
+            console.error('ingestion.controller.csv: ', e);
+            response.status(400).send({message: e.error || e.message});
+        }
+    }
+
+
+    // @Post('/v4-data-emission')
+    // async dataEmission(@Res()response: Response) {
+    //     try {
+    //
+    //     } catch (e) {
+    //         console.error('ingestion.controller.dataEmission: ', e.message);
+    //         throw new Error(e);
+    //     }
+    // }
 }

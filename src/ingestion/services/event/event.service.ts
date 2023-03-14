@@ -14,7 +14,7 @@ export class EventService {
         try {
             if (inputData.event_name) {
                 const eventName = inputData.event_name;
-                const queryStr = await IngestionDatasetQuery.getEvents(eventName);
+                let queryStr = await IngestionDatasetQuery.getEvents(eventName);
                 const queryResult = await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
                 if (queryResult?.length === 1) {
                     let errorCounter = 0, validCounter = 0;
@@ -42,12 +42,20 @@ export class EventService {
                             file = `./error-files/` + fileName + '_errors.csv';
                             await this.service.writeToCSVFile(file, invalidArray);
                             await uploadToS3(`${process.env.ERROR_BUCKET}`, file, fileName + '_errors.csv', `${eventName}/${folderName}`);
+                            if (inputData?.file_tracker_pid) {
+                                queryStr = await IngestionDatasetQuery.updateCounter(inputData.file_tracker_pid, '', errorCounter);
+                                await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
+                            }
                             await this.service.deleteLocalFile(file);
                         }
                         if (validArray.length > 0) {
                             file = `./input-files/` + fileName + '.csv';
                             await this.service.writeToCSVFile(file, validArray);
                             await uploadToS3(`${process.env.INPUT_BUCKET}`, file, fileName + '.csv', `${eventName}/${folderName}`);
+                            if (inputData?.file_tracker_pid) {
+                                queryStr = await IngestionDatasetQuery.updateCounter(inputData.file_tracker_pid, validCounter, '');
+                                await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
+                            }
                             await this.service.deleteLocalFile(file);
                         }
                         invalidArray = undefined;

@@ -8,6 +8,8 @@ import {FileStatusService} from '../services/file-status/file-status.service';
 import {UpdateFileStatusService} from '../services/update-file-status/update-file-status.service';
 import {DatabaseService} from '../../database/database.service';
 import {CsvToJsonService} from '../services/csv-to-json/csv-to-json.service';
+import {DataEmissionService} from "../services/data-emission/data-emission.service";
+import {V4DataEmissionService} from "../services/v4-data-emission/v4-data-emission.service";
 
 describe('IngestionController', () => {
 
@@ -78,6 +80,22 @@ describe('IngestionController', () => {
                         convertCsvToJson: jest.fn()
                     }
                 },
+                {
+                    provide: DataEmissionService,
+                    useValue: {
+                        readAndParseFile: jest.fn(dto => {
+                            dto
+                        })
+                    }
+                },
+                {
+                    provide: V4DataEmissionService,
+                    useValue: {
+                        uploadFiles: jest.fn(dto => {
+                            dto
+                        })
+                    }
+                }
             ],
         }).compile();
         controller = module.get<IngestionController>(IngestionController);
