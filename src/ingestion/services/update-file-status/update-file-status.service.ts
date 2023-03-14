@@ -62,52 +62,13 @@ export class UpdateFileStatusService {
                     //check the status
                     if (queryResult.file_status !== 'Upload_in_progress' && queryResult.file_status !== 'Error' && queryResult.file_status !== 'Ready_to_archive') {
                         queryStr = await IngestionDatasetQuery.updateFileStatus(fileTrackerPid, inputData.status);
-                        await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
-                        if ((inputData.status).substring(0, 9) === 'Completed' && inputData.ingestion_type === 'event') {
-                            //Update File Status
-                            queryStr = await IngestionDatasetQuery.updateFilePipelineTracker((inputData.status).substring(10), inputData.file_name, inputData.ingestion_name);
-                            queryResult = await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
-                            if (queryResult.length === 1) {
-                                //Get Total Dataset count
-                                queryStr = await IngestionDatasetQuery.getDatasetCount(inputData.ingestion_name);
-                                queryResult = await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
-                                datasetCount = queryResult[0].dataset_count;
-
-                                //Get Total Success count
-                                queryStr = await IngestionDatasetQuery.getSuccessStatusCount(inputData.file_name, inputData.ingestion_name);
-                                queryResult = await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
-                                successCount = queryResult[0].success_count;
-
-                                if (datasetCount === successCount) {
-                                    queryStr = await IngestionDatasetQuery.updateFileStatus(fileTrackerPid, 'Ready_to_archive');
-                                    await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
-                                }
-                            } else {
-                                return {
-                                    code: 400,
-                                    error: "Invalid Status"
-                                }
+                        queryResult = await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
+                        if (queryResult[0].pid) {
+                            return {
+                                code: 200,
+                                message: "File status updated successfully",
+                                ready_to_archive: true
                             }
-                        } else {
-                            if ((inputData.status).substring(0, 9) === 'Completed' && inputData.ingestion_type !== 'event') {
-                                queryStr = await IngestionDatasetQuery.updateFileStatus(fileTrackerPid, 'Ready_to_archive');
-                                await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
-                            }
-                        }
-                    }
-                    if ((inputData.ingestion_type === 'dimension' && (inputData.status).substring(0, 9) === 'Completed') || (inputData.ingestion_type === 'dataset' && (inputData.status).substring(0, 9) === 'Completed')
-                        || (datasetCount !== undefined && successCount !== undefined) && datasetCount == successCount) {
-                        return {
-                            code: 200,
-                            message: "File status updated successfully",
-                            ready_to_archive: true
-                        }
-                    }
-                    else {
-                        return {
-                            code: 200,
-                            message: "File status updated successfully",
-                            ready_to_archive: false
                         }
                     }
                 } else {

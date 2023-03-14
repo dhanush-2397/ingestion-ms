@@ -3,6 +3,8 @@ import Ajv from "ajv";
 import Ajv2019 from "ajv/dist/2019";
 import addFormats from "ajv-formats";
 import {InputSchema} from "../interfaces/Ingestion-data";
+import * as fs from 'fs';
+const path = require('path');
 
 const ajv = new Ajv2019();
 addFormats(ajv);
@@ -67,17 +69,37 @@ export class GenericFunction {
         return new Promise((resolve) => setTimeout(resolve, time));
     }
 
-    async formatDataToCSVBySchema(input:any, schema:InputSchema,addQuotes=true) {
-        const {properties} = schema.items;
+    async formatDataToCSVBySchema(input: any, schema: InputSchema, addQuotes = true) {
+        const {properties} = schema;
         Object.keys(input).forEach(property => {
             if (properties[property]) {
                 if (addQuotes && properties[property].type === 'string') {
                     input[property] = `'${input[property]}'`;
-                } else if (properties[property].type === 'integer' || properties[property].type === 'number'|| properties[property].type === 'float') {
+                } else if (properties[property].type === 'integer' || properties[property].type === 'number' || properties[property].type === 'float') {
                     input[property] = Number(input[property]);
                 }
             }
         });
         return input;
+    }
+
+    async getDate() {
+        let yourDate = new Date();
+        const formattedDate = yourDate.toLocaleDateString('en-GB', {
+            day: 'numeric', month: 'short', year: 'numeric'
+        }).replace(/ /g, '-');
+        return formattedDate;
+    }
+
+    deleteLocalFile(fullFilePath) {
+        return new Promise((resolve,reject)=>{
+            fs.unlink(fullFilePath, (err) => {
+                if (err){
+                    reject(err);
+                }
+                resolve('File deleted successfully! '+fullFilePath);
+            });
+        })
+
     }
 }

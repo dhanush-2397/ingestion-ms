@@ -3,6 +3,8 @@ import {IngestionDatasetQuery} from '../../query/ingestionQuery';
 import {DatabaseService} from '../../../database/database.service';
 import {GenericFunction} from '../generic-function';
 
+import {uploadToS3} from '../s3-upload'
+
 @Injectable()
 export class DatasetService {
     constructor(private DatabaseService: DatabaseService, private service: GenericFunction) {
@@ -18,29 +20,36 @@ export class DatasetService {
                     if (inputData.dataset) {
                         let errorCounter = 0, validCounter = 0;
                         let validArray = [], invalidArray = [];
-                        if (inputData.dataset.items && inputData.dataset.items.length > 0) {
-                            for (let record of inputData.dataset?.items) {
-                                const isValidSchema: any = await this.service.ajvValidator(queryResult[0].dataset_data.input.properties.dataset.properties.items, [record]);
+                        if (inputData.dataset && inputData.dataset.length > 0) {
+                            for (let record of inputData.dataset) {
+                                const isValidSchema: any = await this.service.ajvValidator(queryResult[0].schema, [record]);
                                 if (isValidSchema.errors) {
                                     record['description'] = isValidSchema.errors;
                                     invalidArray.push(record);
                                     errorCounter = errorCounter + 1;
                                 } else {
-                                    let schema = queryResult[0].dataset_data.input.properties.dataset.properties.items;
+                                    let schema = queryResult[0].schema;
                                     validArray.push(await this.service.formatDataToCSVBySchema(record, schema));
                                     validCounter = validCounter + 1;
                                 }
                             }
-
+                            let file;
                             let fileName = datasetName;
                             if (inputData?.file_tracker_pid) {
                                 fileName = datasetName + `_${inputData?.file_tracker_pid}`;
                             }
+                            let folderName = await this.service.getDate();
                             if (invalidArray.length > 0) {
-                                await this.service.writeToCSVFile(`./error-files/` + fileName + '_errors.csv', invalidArray);
+                                file = `./error-files/` + fileName + '_errors.csv';
+                                await this.service.writeToCSVFile(file, invalidArray);
+                                await uploadToS3(`${process.env.ERROR_BUCKET}`, file, fileName + '_errors.csv', `${datasetName}/${folderName}`);
+                                await this.service.deleteLocalFile(file);
                             }
                             if (validArray.length > 0) {
-                                await this.service.writeToCSVFile(`./input-files/` + fileName + '.csv', validArray);
+                                file = `./input-files/` + fileName + '.csv';
+                                await this.service.writeToCSVFile(file, validArray);
+                                await uploadToS3(`${process.env.INPUT_BUCKET}`, file, fileName + '.csv', `${datasetName}/${folderName}`);
+                                await this.service.deleteLocalFile(file);
                             }
                             invalidArray = undefined;
                             validArray = undefined;

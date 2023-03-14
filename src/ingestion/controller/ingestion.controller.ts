@@ -7,7 +7,7 @@ import {
     FileStatus,
     IEvent,
     Pipeline,
-    Result
+    Result, EmissionBody
 } from '../interfaces/Ingestion-data';
 import {
     Body,
@@ -26,7 +26,6 @@ import {
 import {DatasetService} from '../services/dataset/dataset.service';
 import {DimensionService} from '../services/dimension/dimension.service';
 import {EventService} from '../services/event/event.service';
-import {PipelineService} from '../services/pipeline/pipeline.service';
 import {Response} from 'express';
 import {CsvImportService} from "../services/csvImport/csvImport.service";
 import {FileInterceptor} from "@nestjs/platform-express";
@@ -36,18 +35,20 @@ import {FileStatusService} from '../services/file-status/file-status.service';
 import {UpdateFileStatusService} from '../services/update-file-status/update-file-status.service';
 import {ApiConsumes, ApiTags} from '@nestjs/swagger';
 import {DatabaseService} from '../../database/database.service';
-import { CsvToJsonService } from '../services/csv-to-json/csv-to-json.service';
-import {GenericFunction} from '../services/generic-function';
+import {CsvToJsonService} from '../services/csv-to-json/csv-to-json.service';
+import {DataEmissionService} from '../services/data-emission/data-emission.service';
+import {V4DataEmissionService} from "../services/v4-data-emission/v4-data-emission.service";
 import { JwtGuard } from 'src/guards/jwt.guard';
 import * as jwt from 'jsonwebtoken';
 import { catchError } from 'rxjs';
+
 @ApiTags('ingestion')
-@Controller('')
+@Controller('/ingestion')
 export class IngestionController {
     constructor(
-        private datasetservice: DatasetService, private dimesionService: DimensionService
-        , private eventService: EventService, private pipelineService: PipelineService, private csvImportService: CsvImportService
-        , private filestatus: FileStatusService, private updateFileStatus: UpdateFileStatusService, private databaseService: DatabaseService,private csvToJson:CsvToJsonService) {
+        private datasetService: DatasetService, private dimensionService: DimensionService
+        , private eventService: EventService, private csvImportService: CsvImportService, private fileStatus: FileStatusService, private updateFileStatus: UpdateFileStatusService,
+        private databaseService: DatabaseService, private csvToJson: CsvToJsonService, private dataEmissionService: DataEmissionService, private v4DataEmissionService: V4DataEmissionService) {
     }
 
     @Get('generatejwt')
@@ -80,7 +81,7 @@ export class IngestionController {
         }
         catch (e) {
             console.error('execute-query-impl: ', e.message);
-            response.status(500).send("Error running SQL query: " + e.message)
+            response.status(500).send("Error running SQL query: " + e.message);
             throw new Error(e);
         }
     }
@@ -89,7 +90,7 @@ export class IngestionController {
     @UseGuards(JwtGuard)
     async createDataset(@Body() inputData: Dataset, @Res()response: Response) {
         try {
-            let result: Result = await this.datasetservice.createDataset(inputData);
+            let result: Result = await this.datasetService.createDataset(inputData);
             if (result.code == 400) {
                 response.status(400).send({"message": result.error});
             } else {
@@ -109,7 +110,7 @@ export class IngestionController {
     @UseGuards(JwtGuard)
     async createDimenshion(@Body() inputData: Dimension, @Res()response: Response) {
         try {
-            let result: Result = await this.dimesionService.createDimension(inputData);
+            let result: Result = await this.dimensionService.createDimension(inputData);
             if (result.code == 400) {
                 response.status(400).send({"message": result.error});
             } else {
@@ -139,22 +140,6 @@ export class IngestionController {
             }
         } catch (e) {
             console.error('create-event-impl: ', e.message);
-            throw new Error(e);
-        }
-    }
-
-    @Post('/pipeline')
-    async pipeline(@Body() pipelineData: Pipeline, @Res()response: Response) {
-        try {
-            let result = await this.pipelineService.pipeline(pipelineData);
-            if (result.code == 400) {
-                response.status(400).send({"message": result.error});
-            } else {
-                response.status(200).send({"message": result.message});
-            }
-        }
-        catch (e) {
-            console.error('create-pipeline-impl: ', e.message);
             throw new Error(e);
         }
     }
@@ -193,7 +178,7 @@ export class IngestionController {
     @UseGuards(JwtGuard)
     async getFileStatus(@Query() query: FileStatus, @Res()response: Response) {
         try {
-            let result: any = await this.filestatus.getFileStatus(query);
+            let result: any = await this.fileStatus.getFileStatus(query);
             if (result.code == 400) {
                 response.status(400).send({"message": result.error});
             } else {
@@ -230,11 +215,53 @@ export class IngestionController {
             if (result.code == 400) {
                 response.status(400).send({message: result.error});
             } else {
-                response.status(200).send({message: result.message,data:result.response});
+                response.status(200).send({message: result.message, data: result.response});
             }
         } catch (e) {
             console.error('ingestion.controller.csvtojson: ', e);
             response.status(400).send({message: e.error || e.message});
         }
     }
+
+    @UseInterceptors(FileInterceptor('file', {
+        storage: diskStorage({
+            destination: './emission-files',
+            filename: (req, file, cb) => {
+                cb(null, `${file.originalname}`);
+            }
+        })
+    }))
+    @Post('/data-emission')
+    @ApiConsumes('multipart/form-data')
+    async uploadFile(@Body() body: EmissionBody, @Res()response: Response, @UploadedFile(
+        new ParseFilePipe({
+            validators: [
+                new FileIsDefinedValidator(),
+                new FileTypeValidator({fileType: 'zip'}),
+            ],
+        }),
+    ) file: Express.Multer.File) {
+        try {
+            let result = await this.dataEmissionService.readAndParseFile(file);
+            if (result.code == 400) {
+                response.status(400).send({message: result.error});
+            } else {
+                response.status(200).send({message: result.message});
+            }
+        } catch (e) {
+            console.error('ingestion.controller.csv: ', e);
+            response.status(400).send({message: e.error || e.message});
+        }
+    }
+
+
+    // @Post('/v4-data-emission')
+    // async dataEmission(@Res()response: Response) {
+    //     try {
+    //
+    //     } catch (e) {
+    //         console.error('ingestion.controller.dataEmission: ', e.message);
+    //         throw new Error(e);
+    //     }
+    // }
 }

@@ -141,7 +141,7 @@ export class CsvToJson {
 
 export interface InputSchema {
     type: string;
-    items: Items;
+    properties: Items;
     shouldnotnull: boolean;
 }
 
@@ -149,4 +149,9 @@ export interface Items {
     type: string;
     required: string[];
     properties: any;
+}
+
+export class EmissionBody {
+    @ApiProperty({type: 'string', format: 'binary', required: true})
+    file: Express.Multer.File;
 }
