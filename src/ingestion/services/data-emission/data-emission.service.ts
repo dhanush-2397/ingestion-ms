@@ -4,7 +4,7 @@ import {DatabaseService} from "../../../database/database.service";
 import {GenericFunction} from "../generic-function";
 import {Result} from "../../interfaces/Ingestion-data";
 import {IngestionDatasetQuery} from "../../query/ingestionQuery";
-import {uploadToS3} from "../s3-upload";
+import {uploadToMinio} from "../minio-upload";
 
 @Injectable()
 export class DataEmissionService {
@@ -22,7 +22,7 @@ export class DataEmissionService {
             if (queryResult?.length === 1) {
                 let fileTrackerPid = queryResult[0].pid;
                 let folderName = await this.service.getDate();
-                await uploadToS3(`${process.env.EMISSION_BUCKET}`, filePath, uploadedFileName, folderName);
+                await uploadToMinio(`${process.env.EMISSION_BUCKET}`, filePath, uploadedFileName, folderName);
                 const queryStr = await IngestionDatasetQuery.updateFileTracker(fileTrackerPid, 'Uploaded', uploadedFileName);
                 await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
                 await this.service.deleteLocalFile(filePath);
