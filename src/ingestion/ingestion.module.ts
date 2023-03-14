@@ -13,11 +13,12 @@ import {UpdateFileStatusService} from "./services/update-file-status/update-file
 import {CsvToJsonService} from './services/csv-to-json/csv-to-json.service';
 import {DataEmissionService} from "./services/data-emission/data-emission.service";
 import {V4DataEmissionService} from "./services/v4-data-emission/v4-data-emission.service";
+import {AzureUpload} from "./services/azure-upload";
 
 @Module({
     controllers: [IngestionController],
     providers: [DatasetService, DimensionService, EventService, GenericFunction, HttpCustomService, CsvImportService, FileStatusService,
-        UpdateFileStatusService, CsvToJsonService, DataEmissionService, V4DataEmissionService],
+        UpdateFileStatusService, CsvToJsonService, DataEmissionService, V4DataEmissionService,AzureUpload],
     imports: [DatabaseModule, HttpModule]
 })
 export class IngestionModule {
