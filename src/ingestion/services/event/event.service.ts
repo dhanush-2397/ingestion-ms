@@ -41,7 +41,7 @@ export class EventService {
                         if (invalidArray.length > 0) {
                             file = `./error-files/` + fileName + '_errors.csv';
                             await this.service.writeToCSVFile(file, invalidArray);
-                            await uploadToS3(`${process.env.ERROR_BUCKET}`, file, fileName + '_errors.csv', `${eventName}/${folderName}`);
+                            await uploadToS3(`${process.env.INGESTION_ERROR_BUCKET}`, file, fileName + '_errors.csv', `${eventName}/${folderName}`);
                             if (inputData?.file_tracker_pid) {
                                 queryStr = await IngestionDatasetQuery.updateCounter(inputData.file_tracker_pid, '', errorCounter);
                                 await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
