@@ -150,3 +150,8 @@ export interface Items {
     required: string[];
     properties: any;
 }
+
+export class EmissionBody {
+    @ApiProperty({type: 'string', format: 'binary', required: true})
+    file: Express.Multer.File;
+}

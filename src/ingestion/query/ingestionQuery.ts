@@ -32,7 +32,7 @@ export const IngestionDatasetQuery = {
         return {query: queryStr, values: [pid, fileStatus]};
     },
     async getFileStatus(fileName, ingestionType, ingestionName) {
-        const queryStr = `SELECT pid,file_status,created_at 
+        const queryStr = `SELECT pid,file_status,created_at,processed_data_count,error_data_count
         FROM ingestion."FileTracker" 
         WHERE uploaded_file_name = $1 
         AND ingestion_type=$2 
@@ -55,5 +55,18 @@ export const IngestionDatasetQuery = {
             updated_at = CURRENT_TIMESTAMP
             WHERE pid = $1 RETURNING pid;`;
         return {query: queryStr, values: [pid, fileStatus]};
+    },
+    async updateCounter(fileTrackerPid, validCounter, errorCounter) {
+        let query = "";
+        if (validCounter) {
+            query = `SET processed_data_count = ${+validCounter}`
+        } else if (errorCounter) {
+            query = `SET error_data_count = ${+errorCounter}`
+        }
+        const queryStr = `UPDATE ingestion."FileTracker"
+        ${query}
+        WHERE pid = $1;`;
+        console.log('ingestionQuery.updateCounter: ', queryStr);
+        return {query: queryStr, values: [fileTrackerPid]};
     }
 };
