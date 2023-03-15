@@ -2,9 +2,7 @@ import {HttpCustomService} from "../HttpCustomService";
 import {Injectable} from "@nestjs/common";
 import {DatabaseService} from "../../../database/database.service";
 import {GenericFunction} from "../generic-function";
-import {Result} from "../../interfaces/Ingestion-data";
 import { uploadFilestoS3 } from "../s3-upload";
-import { resolve } from "path";
 
 @Injectable()
 export class V4DataEmissionService {
@@ -12,8 +10,14 @@ export class V4DataEmissionService {
     }
 
     async uploadFiles() {
-        let result = await uploadFilestoS3()
-        console.log(result);
-        return result;
+        let files = process.env.INPUT_LOCATION;
+        try{
+            let result = await uploadFilestoS3(process.env.AWS_EMISSION_BUCKET,files)
+            console.log('result===>', result);
+            return result;
+       }catch(error){
+        console.error("error is", error.message);
+        throw new Error(error)
+       }
     }
 }

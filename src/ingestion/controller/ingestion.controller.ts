@@ -257,7 +257,8 @@ export class IngestionController {
     @Post('/v4-data-emission')
     async dataEmission(@Res()response: Response) {
         try {
-           const result: any  = this.v4DataEmissionService.uploadFiles()
+           const result: any  = await this.v4DataEmissionService.uploadFiles()
+           console.log("The result is:", result);
            if (result.code == 400) {
             response.status(400).send({message: result.error});
         } else {
