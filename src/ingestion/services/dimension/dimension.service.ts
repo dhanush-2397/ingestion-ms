@@ -3,7 +3,7 @@ import {IngestionDatasetQuery} from '../../query/ingestionQuery';
 import {DatabaseService} from '../../../database/database.service';
 import {GenericFunction} from '../generic-function';
 
-import {uploadToS3} from '../s3-upload'
+import {uploadToS3} from '../minio-upload'
 
 @Injectable()
 export class DimensionService {

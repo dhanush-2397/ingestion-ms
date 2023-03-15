@@ -40,7 +40,6 @@ import {DataEmissionService} from '../services/data-emission/data-emission.servi
 import {V4DataEmissionService} from "../services/v4-data-emission/v4-data-emission.service";
 import { JwtGuard } from 'src/guards/jwt.guard';
 import * as jwt from 'jsonwebtoken';
-import { catchError } from 'rxjs';
 
 @ApiTags('ingestion')
 @Controller('/ingestion')
@@ -255,13 +254,18 @@ export class IngestionController {
     }
 
 
-    // @Post('/v4-data-emission')
-    // async dataEmission(@Res()response: Response) {
-    //     try {
-    //
-    //     } catch (e) {
-    //         console.error('ingestion.controller.dataEmission: ', e.message);
-    //         throw new Error(e);
-    //     }
-    // }
+    @Post('/v4-data-emission')
+    async dataEmission(@Res()response: Response) {
+        try {
+           const result: any  = this.v4DataEmissionService.uploadFiles()
+           if (result.code == 400) {
+            response.status(400).send({message: result.error});
+        } else {
+            response.status(200).send({message: result.message});
+        }
+        } catch (e) {
+            console.error('ingestion.controller.v4dataEmission: ', e.message);
+            throw new Error(e);
+        }
+    }
 }

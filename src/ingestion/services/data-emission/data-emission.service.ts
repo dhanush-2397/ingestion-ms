@@ -4,7 +4,7 @@ import {DatabaseService} from "../../../database/database.service";
 import {GenericFunction} from "../generic-function";
 import {Result} from "../../interfaces/Ingestion-data";
 import {IngestionDatasetQuery} from "../../query/ingestionQuery";
-import {uploadToS3} from "../s3-upload";
+import {uploadToS3} from "../minio-upload";
 
 @Injectable()
 export class DataEmissionService {
