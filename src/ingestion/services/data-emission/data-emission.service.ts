@@ -27,7 +27,7 @@ export class DataEmissionService {
                 if (process.env.STORAGE_TYPE === 'local') {
                     await uploadToMinio(`${process.env.EMISSION_BUCKET}`, filePath, uploadedFileName, `emission/${folderName}`);
                 } else if (process.env.STORAGE_TYPE === 'azure') {
-                    await this.azureService.uploadBlob(`${process.env.EMISSION_CONTAINER}`, filePath, `emission/${folderName}/${uploadedFileName}.csv`);
+                    await this.azureService.uploadBlob(`${process.env.EMISSION_CONTAINER}`, filePath, `emission/${folderName}/${uploadedFileName}`);
                 }
 
                 const queryStr = await IngestionDatasetQuery.updateFileTracker(fileTrackerPid, 'Uploaded', uploadedFileName);
