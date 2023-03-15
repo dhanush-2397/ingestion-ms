@@ -4,6 +4,7 @@ import Ajv2019 from "ajv/dist/2019";
 import addFormats from "ajv-formats";
 import {InputSchema} from "../interfaces/Ingestion-data";
 import * as fs from 'fs';
+
 const path = require('path');
 
 const ajv = new Ajv2019();
@@ -92,14 +93,15 @@ export class GenericFunction {
     }
 
     deleteLocalFile(fullFilePath) {
-        return new Promise((resolve,reject)=>{
-            fs.unlink(fullFilePath, (err) => {
-                if (err){
-                    reject(err);
-                }
-                resolve('File deleted successfully! '+fullFilePath);
-            });
+        return new Promise((resolve, reject) => {
+            if (fs.existsSync(fullFilePath)) {
+                fs.unlink(fullFilePath, (err) => {
+                    if (err) {
+                        reject(err);
+                    }
+                    resolve('File deleted successfully! ' + fullFilePath);
+                });
+            }
         })
-
     }
 }
