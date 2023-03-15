@@ -52,7 +52,6 @@ export class EventService {
                                 queryStr = await IngestionDatasetQuery.updateCounter(inputData.file_tracker_pid, '', errorCounter);
                                 await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
                             }
-                            await this.service.deleteLocalFile(file);
                         }
                         if (validArray.length > 0) {
                             file = `./input-files/` + fileName + '.csv';
@@ -68,7 +67,6 @@ export class EventService {
                                 queryStr = await IngestionDatasetQuery.updateCounter(inputData.file_tracker_pid, validCounter, '');
                                 await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
                             }
-                            await this.service.deleteLocalFile(file);
                         }
                         invalidArray = undefined;
                         validArray = undefined;

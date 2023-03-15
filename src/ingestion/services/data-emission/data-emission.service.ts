@@ -5,10 +5,11 @@ import {GenericFunction} from "../generic-function";
 import {Result} from "../../interfaces/Ingestion-data";
 import {IngestionDatasetQuery} from "../../query/ingestionQuery";
 import {uploadToMinio} from "../minio-upload";
+import {AzureUpload} from "../azure-upload";
 
 @Injectable()
 export class DataEmissionService {
-    constructor(private http: HttpCustomService, private service: GenericFunction, private DatabaseService: DatabaseService) {
+    constructor(private http: HttpCustomService, private service: GenericFunction, private DatabaseService: DatabaseService, private azureService: AzureUpload) {
     }
 
     async readAndParseFile(File: Express.Multer.File): Promise<Result> {
@@ -22,7 +23,13 @@ export class DataEmissionService {
             if (queryResult?.length === 1) {
                 let fileTrackerPid = queryResult[0].pid;
                 let folderName = await this.service.getDate();
-                await uploadToMinio(`${process.env.EMISSION_BUCKET}`, filePath, uploadedFileName, folderName);
+
+                if (process.env.STORAGE_TYPE === 'local') {
+                    await uploadToMinio(`${process.env.EMISSION_BUCKET}`, filePath, uploadedFileName, `emission/${folderName}`);
+                } else if (process.env.STORAGE_TYPE === 'azure') {
+                    await this.azureService.uploadBlob(`${process.env.EMISSION_CONTAINER}`, filePath, `emission/${folderName}/${uploadedFileName}.csv`);
+                }
+
                 const queryStr = await IngestionDatasetQuery.updateFileTracker(fileTrackerPid, 'Uploaded', uploadedFileName);
                 await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
                 await this.service.deleteLocalFile(filePath);
