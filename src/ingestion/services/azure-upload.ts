@@ -33,20 +33,13 @@ export class AzureUpload {
             }
             const blockBlobClientStream = containerClient.createWriteStreamToBlockBlob();
         );*/
-        try{
+        try {
             const localFile = readFileSync(localFileFullPath);
             const containerClient = this.blobServiceClient.getContainerClient(container);
             const blockClient = containerClient.getBlockBlobClient(uploadFilePath);
             return blockClient.upload(localFile, localFile.length);
-        }catch (e) {
-            console.error(`azure-upload.uploadBlob: container - ${container} , localFileFullPath - ${localFileFullPath}, uploadFilePath - ${uploadFilePath} `,e);
+        } catch (e) {
+            console.error(`azure-upload.uploadBlob: container - ${container} , localFileFullPath - ${localFileFullPath}, uploadFilePath - ${uploadFilePath} `, e);
         }
-
-
-        /*this.containerClient = container + '/' + path + '/' + fileName;
-        this.containerClient = this.blobServiceClient.getContainerClient(container);
-        let blockBlobClient = this.containerClient.getBlockBlobClient(fileName);
-        return blockBlobClient.upload(content, content.length);*/
-
     }
 }

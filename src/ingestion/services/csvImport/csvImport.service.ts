@@ -133,6 +133,7 @@ export class CsvImportService {
                         // delete the file
                         try {
                             await fs.unlinkSync(fileCompletePath);
+                            await this.service.deleteLocalFile(`./error-files/${ingestionName}_${fileTrackerPid}_errors.csv`);
                             const queryStr = await IngestionDatasetQuery.updateFileTracker(fileTrackerPid, 'Error');
                             await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
                             resolve(`Error -> file stream error ${err}`);
@@ -143,7 +144,6 @@ export class CsvImportService {
                     .on('end', async () => {
                         try {
                             // flush the remaining csv data to API
-                            // console.log('csvImport.service.ingestionTypeBodyArray: ', ingestionTypeBodyArray);
                             if (ingestionTypeBodyArray.length > 0) {
                                 batchCounter = 0;
                                 await this.resetAndMakeAPICall(ingestionType, ingestionName, ingestionTypeBodyArray, csvReadStream, apiResponseDataList, true, fileTrackerPid);
@@ -154,6 +154,8 @@ export class CsvImportService {
                             // delete the file
                             try {
                                 await fs.unlinkSync(fileCompletePath);
+                                await this.service.deleteLocalFile(`./input-files/${ingestionName}_${fileTrackerPid}.csv`);
+                                await this.service.deleteLocalFile(`./error-files/${ingestionName}_${fileTrackerPid}_errors.csv`);
                             } catch (e) {
                                 console.error('csvImport.service.file delete error: ', e);
                             }
@@ -161,7 +163,6 @@ export class CsvImportService {
                             resolve(`Success -> complete`);
                         } catch (apiErr) {
                             /*let validObject = 0, invalidObject = 0;
-                            console.log('csvImport.service.apiErr: ', apiResponseDataList);
                             for (let responseData of apiResponseDataList) {
                                 invalidObject += responseData.invalid_record_count;
                                 validObject += responseData.valid_record_count;
@@ -173,6 +174,7 @@ export class CsvImportService {
                             await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
                             // delete the file
                             fs.unlinkSync(fileCompletePath);
+                            await this.service.deleteLocalFile(`./error-files/${ingestionName}_${fileTrackerPid}_errors.csv`);
                             resolve(`Error END -> API err ${apiErr.message}`);
                         }
                     });
