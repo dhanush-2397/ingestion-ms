@@ -23,7 +23,7 @@ export class DatasetService {
                             for (let record of inputData.dataset) {
                                 const isValidSchema: any = await this.service.ajvValidator(queryResult[0].schema, [record]);
                                 if (isValidSchema.errors) {
-                                    record['description'] = isValidSchema.errors;
+                                    record['error_description'] = isValidSchema.errors;
                                     invalidArray.push(record);
                                     errorCounter = errorCounter + 1;
                                 } else {

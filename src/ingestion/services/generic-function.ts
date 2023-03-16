@@ -45,7 +45,7 @@ export class GenericFunction {
             this.currentlyLockedFiles[fileName] = true;
             const csv = new ObjectsToCsv(inputArray);
 
-            let response = await csv.toDisk(fileName, {append: true, allColumns: true});
+            let response = await csv.toDisk(fileName, {append: true});
             // delete the lock after writing
             delete this.currentlyLockedFiles[fileName];
             return response;
