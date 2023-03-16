@@ -147,7 +147,7 @@ export class IngestionController {
             destination: './files',
         })
     }))
-    @Post('/csv')
+    @Post('/new_programs')
     @UseGuards(JwtGuard)
     @ApiConsumes('multipart/form-data')
     async csv(@Body() body: CSVBody, @Res()response: Response, @UploadedFile(
@@ -229,7 +229,7 @@ export class IngestionController {
             }
         })
     }))
-    @Post('/data-emission')
+    @Post('/national_programs')
     @UseGuards(JwtGuard)
     @ApiConsumes('multipart/form-data')
     async uploadFile(@Body() body: EmissionBody, @Res()response: Response, @UploadedFile(
