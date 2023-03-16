@@ -2,12 +2,11 @@ import {HttpStatus, Injectable, Res} from '@nestjs/common';
 import {IngestionDatasetQuery} from '../../query/ingestionQuery';
 import {DatabaseService} from '../../../database/database.service';
 import {GenericFunction} from '../generic-function';
-import {uploadToMinio} from '../minio-upload'
-import {AzureUpload} from "../azure-upload";
+import {UploadService} from '../file-uploader-service'
 
 @Injectable()
 export class DatasetService {
-    constructor(private DatabaseService: DatabaseService, private service: GenericFunction, private azureService: AzureUpload) {
+    constructor(private DatabaseService: DatabaseService, private service: GenericFunction, private uploadService: UploadService) {
     }
 
     async createDataset(inputData) {
@@ -44,9 +43,11 @@ export class DatasetService {
                                 await this.service.writeToCSVFile(file, invalidArray);
 
                                 if (process.env.STORAGE_TYPE === 'local') {
-                                    await uploadToMinio(`${process.env.INGESTION_ERROR_BUCKET}`, file, fileName + '_errors.csv', `${datasetName}/${folderName}`);
+                                    await this.uploadService.uploadFiles('local', `${process.env.MINIO_BUCKET}`, file, `ingestion-error/${datasetName}/${folderName}/`);
                                 } else if (process.env.STORAGE_TYPE === 'azure') {
-                                    await this.azureService.uploadBlob(`${process.env.INGESTION_ERROR_CONTAINER}`, file, `${datasetName}/${folderName}/${fileName}_errors.csv`);
+                                    await this.uploadService.uploadFiles('azure', `${process.env.AZURE_CONTAINER}`, file, `ingestion-error/${datasetName}/${folderName}/`);
+                                } else {
+                                    await this.uploadService.uploadFiles('aws', `${process.env.AWS_BUCKET}`, file, `ingestion-error/${datasetName}/${folderName}/`);
                                 }
 
                                 if (inputData?.file_tracker_pid) {
@@ -59,9 +60,11 @@ export class DatasetService {
                                 await this.service.writeToCSVFile(file, validArray);
 
                                 if (process.env.STORAGE_TYPE === 'local') {
-                                    await uploadToMinio(`${process.env.INPUT_BUCKET}`, file, fileName + '.csv', `${datasetName}/${folderName}`);
+                                    await this.uploadService.uploadFiles('local', `${process.env.MINIO_BUCKET}`, file, `combined-input/${datasetName}/${folderName}/`);
                                 } else if (process.env.STORAGE_TYPE === 'azure') {
-                                    await this.azureService.uploadBlob(`${process.env.INPUT_CONTAINER}`, file, `${datasetName}/${folderName}/${fileName}.csv`);
+                                    await this.uploadService.uploadFiles('azure', `${process.env.AZURE_CONTAINER}`, file, `combined-input/${datasetName}/${folderName}/`);
+                                } else {
+                                    await this.uploadService.uploadFiles('aws', `${process.env.AWS_BUCKET}`, file, `combined-input/${datasetName}/${folderName}/`);
                                 }
 
                                 if (inputData?.file_tracker_pid) {

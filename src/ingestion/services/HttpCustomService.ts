@@ -8,8 +8,9 @@ export class HttpCustomService{
     {
 
     }
-    post<T>(url: string, body: any): Promise<AxiosResponse<T>> {
-        return lastValueFrom(this.httpService.post<T>(url, body));
+
+    post<T>(url: string, body: any,options={}): Promise<AxiosResponse<T>> {
+        return lastValueFrom(this.httpService.post<T>(url, body,options));
     }
 
     put<T>(url: string, body: any): Promise<AxiosResponse<T>> {
