@@ -2,12 +2,11 @@ import {Injectable} from '@nestjs/common';
 import {IngestionDatasetQuery} from '../../query/ingestionQuery';
 import {DatabaseService} from '../../../database/database.service';
 import {GenericFunction} from '../generic-function';
-import {uploadToMinio} from '../minio-upload'
-import {AzureUpload} from "../azure-upload";
+import {UploadService} from '../file-uploader-service';
 
 @Injectable()
 export class DimensionService {
-    constructor(private DatabaseService: DatabaseService, private service: GenericFunction, private azureService: AzureUpload) {
+    constructor(private DatabaseService: DatabaseService, private service: GenericFunction, private uploadService: UploadService) {
     }
 
     async createDimension(inputData) {
@@ -44,10 +43,13 @@ export class DimensionService {
                             await this.service.writeToCSVFile(file, invalidArray);
 
                             if (process.env.STORAGE_TYPE === 'local') {
-                                await uploadToMinio(`${process.env.INGESTION_ERROR_BUCKET}`, file, fileName + '_errors.csv', `${dimensionName}/${folderName}`);
+                                await this.uploadService.uploadFiles('local', `${process.env.MINIO_BUCKET}`, file, `ingestion-error/${dimensionName}/${folderName}/`);
                             } else if (process.env.STORAGE_TYPE === 'azure') {
-                                await this.azureService.uploadBlob(`${process.env.INGESTION_ERROR_CONTAINER}`, file, `${dimensionName}/${folderName}/${fileName}_errors.csv`);
+                                await this.uploadService.uploadFiles('azure', `${process.env.AZURE_CONTAINER}`, file, `ingestion-error/${dimensionName}/${folderName}/`);
+                            } else {
+                                await this.uploadService.uploadFiles('aws', `${process.env.AWS_BUCKET}`, file, `ingestion-error/${dimensionName}/${folderName}/`);
                             }
+
 
                             if (inputData?.file_tracker_pid) {
                                 queryStr = await IngestionDatasetQuery.updateCounter(inputData.file_tracker_pid, '', errorCounter);
@@ -59,9 +61,11 @@ export class DimensionService {
                             await this.service.writeToCSVFile(file, validArray);
 
                             if (process.env.STORAGE_TYPE === 'local') {
-                                await uploadToMinio(`${process.env.INPUT_BUCKET}`, file, fileName + '.csv', `${dimensionName}/${folderName}`);
+                                await this.uploadService.uploadFiles('local', `${process.env.MINIO_BUCKET}`, file, `combined-input/${dimensionName}/${folderName}/`);
                             } else if (process.env.STORAGE_TYPE === 'azure') {
-                                await this.azureService.uploadBlob(`${process.env.INPUT_CONTAINER}`, file, `${dimensionName}/${folderName}/${fileName}.csv`);
+                                await this.uploadService.uploadFiles('azure', `${process.env.AZURE_CONTAINER}`, file, `combined-input/${dimensionName}/${folderName}/`);
+                            } else {
+                                await this.uploadService.uploadFiles('aws', `${process.env.AWS_BUCKET}`, file, `combined-input/${dimensionName}/${folderName}/`);
                             }
 
                             if (inputData?.file_tracker_pid) {

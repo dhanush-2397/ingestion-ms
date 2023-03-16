@@ -21,12 +21,12 @@ import {
     UploadedFile,
     UseInterceptors,
     Put,
-    UseGuards
+    UseGuards, Req
 } from '@nestjs/common';
 import {DatasetService} from '../services/dataset/dataset.service';
 import {DimensionService} from '../services/dimension/dimension.service';
 import {EventService} from '../services/event/event.service';
-import {Response} from 'express';
+import {Response, Request} from 'express';
 import {CsvImportService} from "../services/csvImport/csvImport.service";
 import {FileInterceptor} from "@nestjs/platform-express";
 import {diskStorage} from "multer";
@@ -38,7 +38,7 @@ import {DatabaseService} from '../../database/database.service';
 import {CsvToJsonService} from '../services/csv-to-json/csv-to-json.service';
 import {DataEmissionService} from '../services/data-emission/data-emission.service';
 import {V4DataEmissionService} from "../services/v4-data-emission/v4-data-emission.service";
-import { JwtGuard } from 'src/guards/jwt.guard';
+import {JwtGuard} from 'src/guards/jwt.guard';
 import * as jwt from 'jsonwebtoken';
 
 @ApiTags('ingestion')
@@ -51,22 +51,21 @@ export class IngestionController {
     }
 
     @Get('generatejwt')
-    testJwt( @Res() res: Response):any {
+    testJwt(@Res() res: Response): any {
         let jwtSecretKey = process.env.JWT_SECRET;
         let data = {
             time: Date(),
-        }
-        try{
-        const token: string = jwt.sign(data, jwtSecretKey);
-        if(token)
-        {
-            res.status(200).send(token)
-        }
-        else{
-            res.status(400).send("Could not generate token");
-        }
+        };
+        try {
+            const token: string = jwt.sign(data, jwtSecretKey);
+            if (token) {
+                res.status(200).send(token)
+            }
+            else {
+                res.status(400).send("Could not generate token");
+            }
 
-        }catch(error){
+        } catch (error) {
             res.status(400).send("Error Ocurred");
         }
 
@@ -158,9 +157,9 @@ export class IngestionController {
                 new FileTypeValidator({fileType: 'text/csv'}),
             ],
         }),
-    ) file: Express.Multer.File) {
+    ) file: Express.Multer.File, @Req() request: Request) {
         try {
-            let result = await this.csvImportService.readAndParseFile(body, file);
+            let result = await this.csvImportService.readAndParseFile(body, file, request);
             if (result.code == 400) {
                 response.status(400).send({message: result.error});
             } else {
@@ -231,6 +230,7 @@ export class IngestionController {
         })
     }))
     @Post('/data-emission')
+    @UseGuards(JwtGuard)
     @ApiConsumes('multipart/form-data')
     async uploadFile(@Body() body: EmissionBody, @Res()response: Response, @UploadedFile(
         new ParseFilePipe({
@@ -255,15 +255,16 @@ export class IngestionController {
 
 
     @Post('/v4-data-emission')
+    @UseGuards(JwtGuard)
     async dataEmission(@Res()response: Response) {
         try {
-           const result: any  = await this.v4DataEmissionService.uploadFiles()
-           console.log("The result is:", result);
-           if (result.code == 400) {
-            response.status(400).send({message: result.error});
-        } else {
-            response.status(200).send({message: result.message});
-        }
+            const result: any = await this.v4DataEmissionService.uploadFiles();
+            console.log("The result is:", result);
+            if (result.code == 400) {
+                response.status(400).send({message: result.error});
+            } else {
+                response.status(200).send({message: result.message});
+            }
         } catch (e) {
             console.error('ingestion.controller.v4dataEmission: ', e.message);
             throw new Error(e);
