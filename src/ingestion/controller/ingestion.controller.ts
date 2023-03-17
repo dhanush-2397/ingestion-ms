@@ -254,12 +254,11 @@ export class IngestionController {
     }
 
 
-    @Post('/v4-data-emission')
+    @Get('/v4-data-emission')
     @UseGuards(JwtGuard)
     async dataEmission(@Res()response: Response) {
         try {
             const result: any = await this.v4DataEmissionService.uploadFiles();
-            console.log("The result is:", result);
             if (result.code == 400) {
                 response.status(400).send({message: result.error});
             } else {

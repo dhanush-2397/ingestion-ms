@@ -50,7 +50,6 @@ export class UploadService {
             for (let file of filesFullPathToUpload) {
                 try {
                     uploadPathKey = `${uploadPath}${file.fileName}`;
-                    console.log(`file-uploader-service.fileFullPath - ${file.fileFullPath}, upload path - ${uploadPathKey}`);
                     if (to === 'aws') {
                         await this.uploadToS3(bucketName, file.fileFullPath, `${uploadPathKey}`);
                     } else if (to === 'azure') {
@@ -121,7 +120,6 @@ export class UploadService {
             "Content-Type": lookup(fileName),
         };
         return new Promise((resolve, reject) => {
-            console.log('file-uploader-service.file: ', file);
             minioClient.fPutObject(
                 bucketName,
                 `${folderName}`,
