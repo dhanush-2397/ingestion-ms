@@ -19,8 +19,8 @@ const s3 = new AWS.S3({
 });
 
 const minioClient = new Client({
-    endPoint: process.env.END_POINT,
-    port: +process.env.S3_PORT,
+    endPoint: process.env.MINIO_END_POINT,
+    port: +process.env.MINIO_PORT,
     useSSL: false,
     accessKey: process.env.MINIO_ACCESS_KEY,
     secretKey: process.env.MINIO_SECRET_KEY
@@ -93,7 +93,7 @@ export class UploadService {
     private containerName: string;
 
     constructor() {
-        this.connectionStr = process.env.CONNECTION_STRING;
+        this.connectionStr = process.env.AZURE_CONNECTION_STRING;
         this.blobServiceClient = BlobServiceClient.fromConnectionString(this.connectionStr);
     }
 
