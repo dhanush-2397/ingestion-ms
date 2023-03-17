@@ -43,11 +43,11 @@ export class DatasetService {
                                 await this.service.writeToCSVFile(file, invalidArray);
 
                                 if (process.env.STORAGE_TYPE === 'local') {
-                                    await this.uploadService.uploadFiles('local', `${process.env.MINIO_BUCKET}`, file, `ingestion-error/${datasetName}/${folderName}/`);
+                                    await this.uploadService.uploadFiles('local', `${process.env.MINIO_BUCKET}`, file, `ingestion_error/${datasetName}/${folderName}/`);
                                 } else if (process.env.STORAGE_TYPE === 'azure') {
-                                    await this.uploadService.uploadFiles('azure', `${process.env.AZURE_CONTAINER}`, file, `ingestion-error/${datasetName}/${folderName}/`);
+                                    await this.uploadService.uploadFiles('azure', `${process.env.AZURE_CONTAINER}`, file, `ingestion_error/${datasetName}/${folderName}/`);
                                 } else {
-                                    await this.uploadService.uploadFiles('aws', `${process.env.AWS_BUCKET}`, file, `ingestion-error/${datasetName}/${folderName}/`);
+                                    await this.uploadService.uploadFiles('aws', `${process.env.AWS_BUCKET}`, file, `ingestion_error/${datasetName}/${folderName}/`);
                                 }
 
                                 if (inputData?.file_tracker_pid) {
@@ -60,11 +60,11 @@ export class DatasetService {
                                 await this.service.writeToCSVFile(file, validArray);
 
                                 if (process.env.STORAGE_TYPE === 'local') {
-                                    await this.uploadService.uploadFiles('local', `${process.env.MINIO_BUCKET}`, file, `combined-input/${datasetName}/${folderName}/`);
+                                    await this.uploadService.uploadFiles('local', `${process.env.MINIO_BUCKET}`, file, `combined_input/${datasetName}/${folderName}/`);
                                 } else if (process.env.STORAGE_TYPE === 'azure') {
-                                    await this.uploadService.uploadFiles('azure', `${process.env.AZURE_CONTAINER}`, file, `combined-input/${datasetName}/${folderName}/`);
+                                    await this.uploadService.uploadFiles('azure', `${process.env.AZURE_CONTAINER}`, file, `combined_input/${datasetName}/${folderName}/`);
                                 } else {
-                                    await this.uploadService.uploadFiles('aws', `${process.env.AWS_BUCKET}`, file, `combined-input/${datasetName}/${folderName}/`);
+                                    await this.uploadService.uploadFiles('aws', `${process.env.AWS_BUCKET}`, file, `combined_input/${datasetName}/${folderName}/`);
                                 }
 
                                 if (inputData?.file_tracker_pid) {

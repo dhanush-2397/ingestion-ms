@@ -42,11 +42,11 @@ export class EventService {
                             await this.service.writeToCSVFile(file, invalidArray);
 
                             if (process.env.STORAGE_TYPE === 'local') {
-                                await this.uploadService.uploadFiles('local', `${process.env.MINIO_BUCKET}`, file, `ingestion-error/${eventName}/${folderName}/`);
+                                await this.uploadService.uploadFiles('local', `${process.env.MINIO_BUCKET}`, file, `ingestion_error/${eventName}/${folderName}/`);
                             } else if (process.env.STORAGE_TYPE === 'azure') {
-                                await this.uploadService.uploadFiles('azure', `${process.env.AZURE_CONTAINER}`, file, `ingestion-error/${eventName}/${folderName}/`);
+                                await this.uploadService.uploadFiles('azure', `${process.env.AZURE_CONTAINER}`, file, `ingestion_error/${eventName}/${folderName}/`);
                             } else {
-                                await this.uploadService.uploadFiles('aws', `${process.env.AWS_BUCKET}`, file, `ingestion-error/${eventName}/${folderName}/`);
+                                await this.uploadService.uploadFiles('aws', `${process.env.AWS_BUCKET}`, file, `ingestion_error/${eventName}/${folderName}/`);
                             }
 
                             if (inputData?.file_tracker_pid) {
@@ -59,11 +59,11 @@ export class EventService {
                             await this.service.writeToCSVFile(file, validArray);
 
                             if (process.env.STORAGE_TYPE === 'local') {
-                                await this.uploadService.uploadFiles('local', `${process.env.MINIO_BUCKET}`, file, `combined-input/${eventName}/${folderName}/`);
+                                await this.uploadService.uploadFiles('local', `${process.env.MINIO_BUCKET}`, file, `combined_input/${eventName}/${folderName}/`);
                             } else if (process.env.STORAGE_TYPE === 'azure') {
-                                await this.uploadService.uploadFiles('azure', `${process.env.AZURE_CONTAINER}`, file, `combined-input/${eventName}/${folderName}/`);
+                                await this.uploadService.uploadFiles('azure', `${process.env.AZURE_CONTAINER}`, file, `combined_input/${eventName}/${folderName}/`);
                             } else {
-                                await this.uploadService.uploadFiles('aws', `${process.env.AWS_BUCKET}`, file, `combined-input/${eventName}/${folderName}/`);
+                                await this.uploadService.uploadFiles('aws', `${process.env.AWS_BUCKET}`, file, `combined_input/${eventName}/${folderName}/`);
                             }
 
                             if (inputData?.file_tracker_pid) {
