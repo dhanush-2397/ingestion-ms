@@ -7,7 +7,6 @@ import {CsvImportService} from "../services/csvImport/csvImport.service";
 import {FileStatusService} from '../services/file-status/file-status.service';
 import {UpdateFileStatusService} from '../services/update-file-status/update-file-status.service';
 import {DatabaseService} from '../../database/database.service';
-import {CsvToJsonService} from '../services/csv-to-json/csv-to-json.service';
 import {DataEmissionService} from "../services/data-emission/data-emission.service";
 import {V4DataEmissionService} from "../services/v4-data-emission/v4-data-emission.service";
 
@@ -72,12 +71,6 @@ describe('IngestionController', () => {
                         executeQuery: jest.fn(dto => {
                             dto
                         })
-                    }
-                },
-                {
-                    provide: CsvToJsonService,
-                    useValue: {
-                        convertCsvToJson: jest.fn()
                     }
                 },
                 {
