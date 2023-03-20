@@ -35,7 +35,6 @@ import {FileStatusService} from '../services/file-status/file-status.service';
 import {UpdateFileStatusService} from '../services/update-file-status/update-file-status.service';
 import {ApiConsumes, ApiTags} from '@nestjs/swagger';
 import {DatabaseService} from '../../database/database.service';
-import {CsvToJsonService} from '../services/csv-to-json/csv-to-json.service';
 import {DataEmissionService} from '../services/data-emission/data-emission.service';
 import {V4DataEmissionService} from "../services/v4-data-emission/v4-data-emission.service";
 import {JwtGuard} from 'src/guards/jwt.guard';
@@ -47,7 +46,7 @@ export class IngestionController {
     constructor(
         private datasetService: DatasetService, private dimensionService: DimensionService
         , private eventService: EventService, private csvImportService: CsvImportService, private fileStatus: FileStatusService, private updateFileStatus: UpdateFileStatusService,
-        private databaseService: DatabaseService, private csvToJson: CsvToJsonService, private dataEmissionService: DataEmissionService, private v4DataEmissionService: V4DataEmissionService) {
+        private databaseService: DatabaseService, private dataEmissionService: DataEmissionService, private v4DataEmissionService: V4DataEmissionService) {
     }
 
     @Get('generatejwt')
@@ -69,19 +68,6 @@ export class IngestionController {
             res.status(400).send("Error Ocurred");
         }
 
-    }
-
-    @Post('/query')
-    async executeQuery(@Body() body: any, @Res() response: Response) {
-        try {
-            let result = await this.databaseService.executeQuery(body?.query);
-            response.status(200).send(result)
-        }
-        catch (e) {
-            console.error('execute-query-impl: ', e.message);
-            response.status(500).send("Error running SQL query: " + e.message);
-            throw new Error(e);
-        }
     }
 
     @Post('/dataset')
@@ -203,21 +189,6 @@ export class IngestionController {
         catch (e) {
             console.error('ingestion.controller.updateFileStatusService: ', e.message);
             throw new Error(e);
-        }
-    }
-
-    @Get('/metric')
-    async csvtoJson(@Res()response: Response) {
-        try {
-            let result = await this.csvToJson.convertCsvToJson();
-            if (result.code == 400) {
-                response.status(400).send({message: result.error});
-            } else {
-                response.status(200).send({message: result.message, data: result.response});
-            }
-        } catch (e) {
-            console.error('ingestion.controller.csvtojson: ', e);
-            response.status(400).send({message: e.error || e.message});
         }
     }
 

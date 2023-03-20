@@ -10,7 +10,6 @@ import {GenericFunction} from './services/generic-function';
 import {CsvImportService} from "./services/csvImport/csvImport.service";
 import {FileStatusService} from './services/file-status/file-status.service';
 import {UpdateFileStatusService} from "./services/update-file-status/update-file-status.service";
-import {CsvToJsonService} from './services/csv-to-json/csv-to-json.service';
 import {DataEmissionService} from "./services/data-emission/data-emission.service";
 import {V4DataEmissionService} from "./services/v4-data-emission/v4-data-emission.service";
 import {UploadService} from "./services/file-uploader-service";
@@ -18,7 +17,7 @@ import {UploadService} from "./services/file-uploader-service";
 @Module({
     controllers: [IngestionController],
     providers: [DatasetService, DimensionService, EventService, GenericFunction, HttpCustomService, CsvImportService, FileStatusService,
-        UpdateFileStatusService, CsvToJsonService, DataEmissionService, V4DataEmissionService, UploadService],
+        UpdateFileStatusService, DataEmissionService, V4DataEmissionService, UploadService],
     imports: [DatabaseModule, HttpModule]
 })
 export class IngestionModule {
