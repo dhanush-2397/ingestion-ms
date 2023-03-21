@@ -12,19 +12,9 @@ interface FileStructure {
     fileName: string
 }
 
-const s3 = new AWS.S3({
-    signatureVersion: 'v4',
-    accessKeyId: process.env.AWS_ACCESS_KEY,
-    secretAccessKey: process.env.AWS_SECRET_KEY
-});
 
-const minioClient = new Client({
-    endPoint: process.env.MINIO_END_POINT,
-    port: +process.env.MINIO_PORT,
-    useSSL: false,
-    accessKey: process.env.MINIO_ACCESS_KEY,
-    secretKey: process.env.MINIO_SECRET_KEY
-});
+
+
 
 @Injectable()
 export class UploadService {
@@ -69,6 +59,11 @@ export class UploadService {
     }
 
     public uploadToS3(bucket: string, fileFullPath: string, fileName: string): Promise<any> {
+        const s3 = new AWS.S3({
+            signatureVersion: 'v4',
+            accessKeyId: process.env.AWS_ACCESS_KEY,
+            secretAccessKey: process.env.AWS_SECRET_KEY
+        });
         return new Promise((resolve, reject) => {
             // file name
             const params = {
@@ -92,8 +87,7 @@ export class UploadService {
     private containerName: string;
 
     constructor() {
-        this.connectionStr = process.env.AZURE_CONNECTION_STRING;
-        this.blobServiceClient = BlobServiceClient.fromConnectionString(this.connectionStr);
+        
     }
 
     public async uploadBlob(container: string, localFileFullPath: string, uploadFilePath: string) {
@@ -105,6 +99,8 @@ export class UploadService {
             const blockBlobClientStream = containerClient.createWriteStreamToBlockBlob();
         );*/
         try {
+            this.connectionStr = process.env.AZURE_CONNECTION_STRING;
+            this.blobServiceClient = BlobServiceClient.fromConnectionString(this.connectionStr);
             const localFile = fs.readFileSync(localFileFullPath);
             const containerClient = this.blobServiceClient.getContainerClient(container);
             const blockClient = containerClient.getBlockBlobClient(uploadFilePath);
@@ -119,6 +115,13 @@ export class UploadService {
         let metaData = {
             "Content-Type": lookup(fileName),
         };
+        const minioClient = new Client({
+            endPoint: process.env.MINIO_END_POINT,
+            port: +process.env.MINIO_PORT,
+            useSSL: false,
+            accessKey: process.env.MINIO_ACCESS_KEY,
+            secretKey: process.env.MINIO_SECRET_KEY
+        });
         return new Promise((resolve, reject) => {
             minioClient.fPutObject(
                 bucketName,
