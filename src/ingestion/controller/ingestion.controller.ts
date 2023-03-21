@@ -41,7 +41,7 @@ import {JwtGuard} from 'src/guards/jwt.guard';
 import * as jwt from 'jsonwebtoken';
 
 @ApiTags('ingestion')
-@Controller('/ingestion')
+@Controller('')
 export class IngestionController {
     constructor(
         private datasetService: DatasetService, private dimensionService: DimensionService
