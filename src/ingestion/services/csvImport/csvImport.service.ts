@@ -189,7 +189,6 @@ export class CsvImportService {
     async resetAndMakeAPICall(ingestionType: string, ingestionName: string, ingestionTypeBodyArray: any[],
                               csvReadStream: ReadStream, apiResponseData: CSVAPIResponse[], isEnd = false, fileTrackerPid: number, request: Request) {
         let postBody: any = {};
-        console.log('csvImport.service.resetAndMakeAPICall: ', request.headers.authorization);
         const headers = {
             Authorization: request.headers.authorization,
         };
