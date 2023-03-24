@@ -1,14 +1,14 @@
 export const IngestionDatasetQuery = {
     async getDataset(datasetName) {
-        const queryStr = `SELECT schema FROM spec."DatasetGrammar" WHERE cname = $1`;
+        const queryStr = `SELECT schema FROM spec."DatasetGrammar" WHERE program = $1`;
         return {query: queryStr, values: [datasetName]};
     },
     async getDimension(dimensionName) {
-        const queryStr = `SELECT schema FROM spec."DimensionGrammar" WHERE cname = $1`;
+        const queryStr = `SELECT schema FROM spec."DimensionGrammar" WHERE program = $1`;
         return {query: queryStr, values: [dimensionName]};
     },
     async getEvents(eventName) {
-        const queryStr = `SELECT schema FROM spec."EventGrammar" WHERE cname = $1`;
+        const queryStr = `SELECT schema FROM spec."EventGrammar" WHERE program = $1`;
         return {query: queryStr, values: [eventName]};
     },
     async createFileTracker(uploadedFileName, ingestionType, ingestionName, fileSize) {
