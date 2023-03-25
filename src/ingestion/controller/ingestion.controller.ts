@@ -175,23 +175,6 @@ export class IngestionController {
         }
     }
 
-    @Put('/file-status')
-    @UseGuards(JwtGuard)
-    async updateFileStatusService(@Body() inputData: FileStatusInterface, @Res()response: Response) {
-        try {
-            let result: any = await this.updateFileStatus.UpdateFileStatus(inputData);
-            if (result.code == 400) {
-                response.status(400).send({"message": result.error});
-            } else {
-                response.status(200).send({"message": result.message, "ready_to_archive": result.ready_to_archive});
-            }
-        }
-        catch (e) {
-            console.error('ingestion.controller.updateFileStatusService: ', e.message);
-            throw new Error(e);
-        }
-    }
-
     @UseInterceptors(FileInterceptor('file', {
         storage: diskStorage({
             destination: './emission-files',
