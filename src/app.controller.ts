@@ -12,8 +12,6 @@ export class AppController {
         return this.appService.getHello();
     }
 
-    @Get('testjwt')
-    @UseGuards(JwtGuard)
     testJwt(): string {
         return 'You are authorized';
     }
