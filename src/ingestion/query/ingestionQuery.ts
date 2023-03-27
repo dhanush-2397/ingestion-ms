@@ -8,7 +8,7 @@ export const IngestionDatasetQuery = {
         return {query: queryStr, values: [dimensionName]};
     },
     async getEvents(eventName) {
-        const queryStr = `SELECT schema FROM spec."EventGrammar" WHERE program = $1`;
+        const queryStr = `SELECT schema FROM spec."EventGrammar" WHERE program = $1  AND "eventType" = 'EXTERNAL'`;
         return {query: queryStr, values: [eventName]};
     },
     async createFileTracker(uploadedFileName, ingestionType, ingestionName, fileSize) {
