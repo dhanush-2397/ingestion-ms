@@ -193,7 +193,7 @@ export class CsvImportService {
             Authorization: request.headers.authorization,
         };
 
-        const url: string = process.env.URL + `/ingestion/${ingestionType}`;
+        const url: string = process.env.URL + `/${ingestionType}`;
         const mainKey = ingestionType + '_name';
         postBody[mainKey] = ingestionName;
 
