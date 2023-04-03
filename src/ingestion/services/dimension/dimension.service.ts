@@ -73,6 +73,10 @@ export class DimensionService {
                                 await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
                             }
                         }
+
+                        queryStr = await IngestionDatasetQuery.updateTotalCounter(inputData.file_tracker_pid);
+                        await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
+
                         invalidArray = undefined;
                         validArray = undefined;
                         return {
