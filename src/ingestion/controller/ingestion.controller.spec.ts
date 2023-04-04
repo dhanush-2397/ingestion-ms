@@ -3,12 +3,12 @@ import {IngestionController} from './ingestion.controller';
 import {DatasetService} from '../services/dataset/dataset.service';
 import {DimensionService} from '../services/dimension/dimension.service';
 import {EventService} from '../services/event/event.service';
-import {PipelineService} from '../services/pipeline/pipeline.service';
 import {CsvImportService} from "../services/csvImport/csvImport.service";
 import {FileStatusService} from '../services/file-status/file-status.service';
 import {UpdateFileStatusService} from '../services/update-file-status/update-file-status.service';
-import { DatabaseService } from '../../database/database.service';
-import { CsvToJsonService } from '../services/csv-to-json/csv-to-json.service';
+import {DatabaseService} from '../../database/database.service';
+import {DataEmissionService} from "../services/data-emission/data-emission.service";
+import {V4DataEmissionService} from "../services/v4-data-emission/v4-data-emission.service";
 
 describe('IngestionController', () => {
 
@@ -17,7 +17,7 @@ describe('IngestionController', () => {
         const module: TestingModule = await Test.createTestingModule({
             controllers: [IngestionController],
             providers: [DatasetService,
-                DimensionService, EventService, PipelineService,DatabaseService,
+                DimensionService, EventService, DatabaseService,
                 {
                     provide: DatasetService,
                     useValue: {
@@ -43,22 +43,13 @@ describe('IngestionController', () => {
                     }
                 },
                 {
-                    provide: PipelineService,
-                    useValue: {
-                        pipeline: jest.fn(dto => {
-                            dto
-                        })
-                    }
-                },
-                {
                     provide: CsvImportService,
                     useValue: {
                         readAndParseFile: jest.fn(dto => {
                             dto
                         })
                     }
-                },
-                {
+                }, {
                     provide: FileStatusService,
                     useValue: {
                         FileStatusService: jest.fn(dto => {
@@ -83,11 +74,21 @@ describe('IngestionController', () => {
                     }
                 },
                 {
-                    provide: CsvToJsonService,
+                    provide: DataEmissionService,
                     useValue: {
-                        convertCsvToJson: jest.fn()
+                        readAndParseFile: jest.fn(dto => {
+                            dto
+                        })
                     }
                 },
+                {
+                    provide: V4DataEmissionService,
+                    useValue: {
+                        uploadFiles: jest.fn(dto => {
+                            dto
+                        })
+                    }
+                }
             ],
         }).compile();
         controller = module.get<IngestionController>(IngestionController);

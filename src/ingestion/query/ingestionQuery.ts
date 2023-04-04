@@ -1,27 +1,18 @@
 export const IngestionDatasetQuery = {
     async getDataset(datasetName) {
-        const queryStr = `SELECT dataset_data FROM spec.dataset WHERE dataset_name = $1`;
+        const queryStr = `SELECT schema FROM spec."DatasetGrammar" WHERE program = $1`;
         return {query: queryStr, values: [datasetName]};
     },
     async getDimension(dimensionName) {
-        const queryStr = `SELECT dimension_data FROM spec.dimension WHERE dimension_name = $1`;
+        const queryStr = `SELECT schema FROM spec."DimensionGrammar" WHERE program = $1`;
         return {query: queryStr, values: [dimensionName]};
     },
     async getEvents(eventName) {
-        const queryStr = `SELECT event_data FROM spec.event WHERE event_name = $1`;
+        const queryStr = `SELECT schema FROM spec."EventGrammar" WHERE program = $1  AND "eventType" = 'EXTERNAL'`;
         return {query: queryStr, values: [eventName]};
     },
-    async getPipelineSpec(pipelineName) {
-        const queryStr = `SELECT transformer_file, event_name, dataset_name
-        FROM spec.pipeline
-        LEFT JOIN spec.event ON event.pid = pipeline.event_pid
-        LEFT JOIN spec.dataset ON dataset.pid  = pipeline.dataset_pid
-        LEFT JOIN spec.transformer ON transformer.pid = pipeline.transformer_pid
-        WHERE pipeline_name = $1`;
-        return {query: queryStr, values: [pipelineName]};
-    },
     async createFileTracker(uploadedFileName, ingestionType, ingestionName, fileSize) {
-        const queryStr = `INSERT INTO ingestion.file_tracker(uploaded_file_name, ingestion_type, ingestion_name, file_status, filesize)
+        const queryStr = `INSERT INTO ingestion."FileTracker"(uploaded_file_name, ingestion_type, ingestion_name, file_status, filesize)
 	                       VALUES ($1, $2, $3, $4, $5) RETURNING pid`;
         return {
             query: queryStr,
@@ -33,7 +24,7 @@ export const IngestionDatasetQuery = {
         if (ingestionName) {
             whereStr = `, system_file_name = '${ingestionName}.csv'`
         }
-        const queryStr = `UPDATE ingestion.file_tracker
+        const queryStr = `UPDATE ingestion."FileTracker"
             SET file_status = $2,
             updated_at = CURRENT_TIMESTAMP
             ${whereStr}
@@ -41,8 +32,8 @@ export const IngestionDatasetQuery = {
         return {query: queryStr, values: [pid, fileStatus]};
     },
     async getFileStatus(fileName, ingestionType, ingestionName) {
-        const queryStr = `SELECT pid,file_status,created_at 
-        FROM ingestion.file_tracker 
+        const queryStr = `SELECT pid,file_status,created_at, total_data_count, processed_data_count,error_data_count
+        FROM ingestion."FileTracker" 
         WHERE uploaded_file_name = $1 
         AND ingestion_type=$2 
         AND ingestion_name = $3 
@@ -51,7 +42,7 @@ export const IngestionDatasetQuery = {
     },
     async getFile(fileName, ingestionType, ingestionName) {
         const queryStr = `SELECT pid, uploaded_file_name, system_file_name, file_status 
-        FROM ingestion.file_tracker
+        FROM ingestion."FileTracker"
         WHERE system_file_name = $1
         AND ingestion_type = $2
         AND ingestion_name = $3
@@ -59,62 +50,28 @@ export const IngestionDatasetQuery = {
         return {query: queryStr, values: [fileName, ingestionType, ingestionName]};
     },
     async updateFileStatus(pid, fileStatus) {
-        const queryStr = `UPDATE ingestion.file_tracker
+        const queryStr = `UPDATE ingestion."FileTracker"
             SET file_status = $2,
             updated_at = CURRENT_TIMESTAMP
-            WHERE pid = $1;`;
+            WHERE pid = $1 RETURNING pid;`;
         return {query: queryStr, values: [pid, fileStatus]};
     },
-    async updateFileProcessedCount(pid) {
-        const queryStr = `UPDATE ingestion.file_tracker AS ft
-            SET processed_count = ft.processed_count::integer + 1::integer,
-            updated_at = CURRENT_TIMESTAMP
-            WHERE pid = $1 
-            RETURNING *;`;
-        return {query: queryStr, values: [pid]};
+    async updateCounter(fileTrackerPid, validCounter, errorCounter) {
+        let query = "";
+        if (validCounter) {
+            query = `SET processed_data_count = ${+validCounter}`
+        } else if (errorCounter) {
+            query = `SET error_data_count = ${+errorCounter}`
+        }
+        const queryStr = `UPDATE ingestion."FileTracker"
+        ${query}
+        WHERE pid = $1;`;
+        return {query: queryStr, values: [fileTrackerPid]};
     },
-    async getPipelinePid(ingestionName) {
-        const queryStr = `SELECT pid
-        FROM spec.pipeline
-        WHERE event_pid = (SELECT pid FROM spec.event WHERE event_name = $1)
-        AND dataset_pid IS NOT NULL
-        AND is_deleted = false;`;
-        return {query: queryStr, values: [ingestionName]};
-    },
-    async createFilePipelineTracker(fileTrackerPid, pipelinePid) {
-        const queryStr = `INSERT INTO ingestion.file_pipeline_tracker(file_tracker_pid, pipeline_pid)
-       VALUES($1, $2);`;
-        return {query: queryStr, values: [fileTrackerPid, pipelinePid]};
-    },
-    async updateFilePipelineTracker(datasetName, fileName, ingestionName) {
-        const queryStr = `UPDATE ingestion.file_pipeline_tracker
-        SET status = 1,
-        updated_at = CURRENT_TIMESTAMP
-        WHERE file_tracker_pid = (SELECT pid FROM ingestion.file_tracker WHERE system_file_name = $2)
-        AND pipeline_pid = (SELECT pid
-        FROM spec.pipeline
-        WHERE event_pid = (SELECT pid FROM spec.event WHERE event_name = $3)
-        AND dataset_pid = (SELECT pid from spec.dataset WHERE LOWER(dataset_name) = LOWER($1)))
-        RETURNING pid;`;
-        return {query: queryStr, values: [datasetName, fileName, ingestionName]};
-    },
-    async getDatasetCount(ingestionName) {
-        const queryStr = `SELECT COUNT(pid) AS dataset_count
-        FROM spec.pipeline
-        WHERE event_pid = (SELECT pid FROM spec.event WHERE event_name = $1)
-        AND dataset_pid IS NOT NULL
-        AND is_deleted = false;`;
-        return {query: queryStr, values: [ingestionName]};
-    },
-    async getSuccessStatusCount(fileName, ingestionName) {
-        const queryStr = `SELECT COUNT(*) AS success_count
-        FROM ingestion.file_pipeline_tracker
-        WHERE file_tracker_pid = (SELECT pid FROM ingestion.file_tracker WHERE system_file_name = $1)
-        AND pipeline_pid IN (SELECT pid
-        FROM spec.pipeline
-        WHERE event_pid = (SELECT pid FROM spec.event WHERE event_name = $2)
-        AND dataset_pid IS NOT NULL)
-		AND status = 1;`;
-        return {query: queryStr, values: [fileName, ingestionName]};
+    async updateTotalCounter(fileTrackerPid) {
+        const queryStr = `UPDATE ingestion."FileTracker"
+        SET total_data_count = processed_data_count + error_data_count
+       WHERE pid = $1;`;
+        return {query: queryStr, values: [fileTrackerPid]};
     }
 };
