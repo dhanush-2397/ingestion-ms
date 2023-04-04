@@ -3,6 +3,7 @@ import {DimensionService} from './dimension.service';
 import {GenericFunction} from '../generic-function';
 import {DatabaseService} from '../../../database/database.service';
 import * as fs from 'fs';
+import {UploadService} from "../file-uploader-service";
 
 describe('DimensionService', () => {
     let service: DimensionService;
@@ -49,7 +50,7 @@ describe('DimensionService', () => {
 
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
-            providers: [DatabaseService, DimensionService, GenericFunction,
+            providers: [DatabaseService, GenericFunction,UploadService,
                 {
                     provide: DatabaseService,
                     useValue: mockDatabaseService
@@ -108,7 +109,7 @@ describe('DimensionService', () => {
         };
 
         const module: TestingModule = await Test.createTestingModule({
-            providers: [DatabaseService, DimensionService, GenericFunction,
+            providers: [DatabaseService, GenericFunction,UploadService,
                 {
                     provide: DatabaseService,
                     useValue: mockError

@@ -48,7 +48,7 @@ export class CsvImportService {
     constructor(private http: HttpCustomService, private service: GenericFunction, private DatabaseService: DatabaseService) {
     }
 
-    async readAndParseFile(inputBody: CSVInputBodyInterface, file: Express.Multer.File, request: Request): Promise<Result> {
+    async readAndParseFile(inputBody: CSVInputBodyInterface, file: Express.Multer.File, request?: Request): Promise<Result> {
         return new Promise(async (resolve, reject) => {
             const isValidSchema: any = await this.service.ajvValidator(csvImportSchema, inputBody);
             if (isValidSchema.errors) {

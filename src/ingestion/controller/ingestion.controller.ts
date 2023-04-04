@@ -37,7 +37,7 @@ import {ApiConsumes, ApiTags} from '@nestjs/swagger';
 import {DatabaseService} from '../../database/database.service';
 import {DataEmissionService} from '../services/data-emission/data-emission.service';
 import {V4DataEmissionService} from "../services/v4-data-emission/v4-data-emission.service";
-import {JwtGuard} from 'src/guards/jwt.guard';
+import {JwtGuard} from '../../guards/jwt.guard';
 import * as jwt from 'jsonwebtoken';
 
 @ApiTags('ingestion')

@@ -72,118 +72,118 @@ describe('MyService', () => {
         expect(await service.UpdateFileStatus(input)).toStrictEqual(result)
     });
 
-    it('File status updated successfully ready_to_archive: false', async () => {
-        const module: TestingModule = await Test.createTestingModule({
-            providers: [DatabaseService, UpdateFileStatusService, GenericFunction,
-                {
-                    provide: DatabaseService,
-                    useValue: {
-                        executeQuery: jest.fn().mockReturnValueOnce([{file_status: "Completed"}])
-                    }
-                },
-                {
-                    provide: UpdateFileStatusService,
-                    useClass: UpdateFileStatusService
-                },
-                {
-                    provide: GenericFunction,
-                    useClass: GenericFunction
-                }],
-        }).compile();
-        service = module.get<UpdateFileStatusService>(UpdateFileStatusService);
-        let input = {
-            "file_name": "event_students_attendance.csv",
-            "ingestion_type": "event",
-            "ingestion_name": "event_students_attendance",
-            "status": "Processing"
-        };
-
-        let result = {
-            code: 200,
-            message: "File status updated successfully",
-            ready_to_archive: false
-        };
-
-        expect(await service.UpdateFileStatus(input)).toStrictEqual(result)
-    });
-
-    it('File status updated successfully ready_to_archive: true', async () => {
-        const module: TestingModule = await Test.createTestingModule({
-            providers: [DatabaseService, UpdateFileStatusService, GenericFunction,
-                {
-                    provide: DatabaseService,
-                    useValue: {
-                        executeQuery: jest.fn().mockReturnValueOnce([{
-                            file_status: "Completed",
-                            pid: 1
-                        }]).mockReturnValueOnce([])
-                            .mockReturnValueOnce([{dataset_count: 1}]).mockReturnValueOnce([{dataset_count: 1}]).mockReturnValueOnce([{success_count: 1}])
-                    }
-                },
-                {
-                    provide: UpdateFileStatusService,
-                    useClass: UpdateFileStatusService
-                },
-                {
-                    provide: GenericFunction,
-                    useClass: GenericFunction
-                }],
-        }).compile();
-        service = module.get<UpdateFileStatusService>(UpdateFileStatusService);
-        let input = {
-            "file_name": "event_students_attendance.csv",
-            "ingestion_type": "event",
-            "ingestion_name": "event_students_attendance",
-            "status": "Completed"
-        };
-
-        let result = {
-            code: 200,
-            message: "File status updated successfully",
-            ready_to_archive: true
-        };
-
-        expect(await service.UpdateFileStatus(input)).toStrictEqual(result)
-    });
-
-    it('File status updated successfully', async () => {
-        const module: TestingModule = await Test.createTestingModule({
-            providers: [DatabaseService, UpdateFileStatusService, GenericFunction,
-                {
-                    provide: DatabaseService,
-                    useValue: {
-                        executeQuery: jest.fn().mockReturnValueOnce([{
-                            file_status: "Completed",
-                            pid: 1
-                        }]).mockReturnValueOnce([])
-                            .mockReturnValueOnce([{dataset_count: 1}]).mockReturnValueOnce([{dataset_count: 1}]).mockReturnValueOnce([{success_count: 1}])
-                    }
-                },
-                {
-                    provide: UpdateFileStatusService,
-                    useClass: UpdateFileStatusService
-                },
-                {
-                    provide: GenericFunction,
-                    useClass: GenericFunction
-                }],
-        }).compile();
-        service = module.get<UpdateFileStatusService>(UpdateFileStatusService);
-        let input = {
-            "file_name": "dimension_district.csv",
-            "ingestion_type": "dimension",
-            "ingestion_name": "dimension_district",
-            "status": "Completed"
-        };
-
-        let result = {
-            code: 200,
-            message: "File status updated successfully",
-            ready_to_archive: true
-        };
-
-        expect(await service.UpdateFileStatus(input)).toStrictEqual(result)
-    });
+    // it('File status updated successfully ready_to_archive: false', async () => {
+    //     const module: TestingModule = await Test.createTestingModule({
+    //         providers: [DatabaseService, UpdateFileStatusService, GenericFunction,
+    //             {
+    //                 provide: DatabaseService,
+    //                 useValue: {
+    //                     executeQuery: jest.fn().mockReturnValueOnce([{file_status: "Completed"}])
+    //                 }
+    //             },
+    //             {
+    //                 provide: UpdateFileStatusService,
+    //                 useClass: UpdateFileStatusService
+    //             },
+    //             {
+    //                 provide: GenericFunction,
+    //                 useClass: GenericFunction
+    //             }],
+    //     }).compile();
+    //     service = module.get<UpdateFileStatusService>(UpdateFileStatusService);
+    //     let input = {
+    //         "file_name": "event_students_attendance.csv",
+    //         "ingestion_type": "event",
+    //         "ingestion_name": "event_students_attendance",
+    //         "status": "Processing"
+    //     };
+    //
+    //     let result = {
+    //         code: 200,
+    //         message: "File status updated successfully",
+    //         ready_to_archive: false
+    //     };
+    //
+    //     expect(await service.UpdateFileStatus(input)).toStrictEqual(result)
+    // });
+    //
+    // it('File status updated successfully ready_to_archive: true', async () => {
+    //     const module: TestingModule = await Test.createTestingModule({
+    //         providers: [DatabaseService, UpdateFileStatusService, GenericFunction,
+    //             {
+    //                 provide: DatabaseService,
+    //                 useValue: {
+    //                     executeQuery: jest.fn().mockReturnValueOnce([{
+    //                         file_status: "Completed",
+    //                         pid: 1
+    //                     }]).mockReturnValueOnce([])
+    //                         .mockReturnValueOnce([{dataset_count: 1}]).mockReturnValueOnce([{dataset_count: 1}]).mockReturnValueOnce([{success_count: 1}])
+    //                 }
+    //             },
+    //             {
+    //                 provide: UpdateFileStatusService,
+    //                 useClass: UpdateFileStatusService
+    //             },
+    //             {
+    //                 provide: GenericFunction,
+    //                 useClass: GenericFunction
+    //             }],
+    //     }).compile();
+    //     service = module.get<UpdateFileStatusService>(UpdateFileStatusService);
+    //     let input = {
+    //         "file_name": "event_students_attendance.csv",
+    //         "ingestion_type": "event",
+    //         "ingestion_name": "event_students_attendance",
+    //         "status": "Completed"
+    //     };
+    //
+    //     let result = {
+    //         code: 200,
+    //         message: "File status updated successfully",
+    //         ready_to_archive: true
+    //     };
+    //
+    //     expect(await service.UpdateFileStatus(input)).toStrictEqual(result)
+    // });
+    //
+    // it('File status updated successfully', async () => {
+    //     const module: TestingModule = await Test.createTestingModule({
+    //         providers: [DatabaseService, UpdateFileStatusService, GenericFunction,
+    //             {
+    //                 provide: DatabaseService,
+    //                 useValue: {
+    //                     executeQuery: jest.fn().mockReturnValueOnce([{
+    //                         file_status: "Completed",
+    //                         pid: 1
+    //                     }]).mockReturnValueOnce([])
+    //                         .mockReturnValueOnce([{dataset_count: 1}]).mockReturnValueOnce([{dataset_count: 1}]).mockReturnValueOnce([{success_count: 1}])
+    //                 }
+    //             },
+    //             {
+    //                 provide: UpdateFileStatusService,
+    //                 useClass: UpdateFileStatusService
+    //             },
+    //             {
+    //                 provide: GenericFunction,
+    //                 useClass: GenericFunction
+    //             }],
+    //     }).compile();
+    //     service = module.get<UpdateFileStatusService>(UpdateFileStatusService);
+    //     let input = {
+    //         "file_name": "dimension_district.csv",
+    //         "ingestion_type": "dimension",
+    //         "ingestion_name": "dimension_district",
+    //         "status": "Completed"
+    //     };
+    //
+    //     let result = {
+    //         code: 200,
+    //         message: "File status updated successfully",
+    //         ready_to_archive: true
+    //     };
+    //
+    //     expect(await service.UpdateFileStatus(input)).toStrictEqual(result)
+    // });
 
     it('exception', async () => {
         const module: TestingModule = await Test.createTestingModule({

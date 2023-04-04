@@ -3,6 +3,7 @@ import {GenericFunction} from '../generic-function';
 import {EventService} from './event.service';
 import {DatabaseService} from '../../../database/database.service';
 import * as fs from 'fs';
+import {UploadService} from "../file-uploader-service";
 
 describe('EventService', () => {
     let service: EventService;
@@ -50,7 +51,7 @@ describe('EventService', () => {
 
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
-            providers: [DatabaseService, EventService, GenericFunction,
+            providers: [DatabaseService, GenericFunction,UploadService,
                 {
                     provide: DatabaseService,
                     useValue: mockDatabaseService
