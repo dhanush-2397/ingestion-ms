@@ -15,7 +15,7 @@ describe('csvImportService', () => {
     beforeEach(() => jest.clearAllMocks());
 
     afterAll(done => {
-        fs.unlinkSync('./files-test/file_api_call_resume_2.csv');
+        // fs.unlinkSync('./files-test/file_api_call_resume_2.csv');
         fs.unlinkSync('./files-test/file_unsuccessful_api_finished.csv');
         fs.unlinkSync('./files-test/file_unsuccessful_api_in_process.csv');
         fs.rmdirSync('./files-test');
