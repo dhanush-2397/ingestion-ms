@@ -6,18 +6,25 @@ const path = require("path");
 import {BlobServiceClient} from "@azure/storage-blob";
 import {lookup} from "mime-types";
 import {Client} from "minio"
+import {objectstorage} from "oci-sdk";
+import * as common from "oci-common";
 
 interface FileStructure {
     fileFullPath: string,
     fileName: string
 }
 
-
-
-
-
 @Injectable()
 export class UploadService {
+
+    // using default provider ~/.oci/config
+    private provider: common.ConfigFileAuthenticationDetailsProvider = new common.ConfigFileAuthenticationDetailsProvider();
+    private oracleObjectStorageClient = new objectstorage.ObjectStorageClient({authenticationDetailsProvider: this.provider});
+
+    private blobServiceClient;
+    private connectionStr: string;
+    private containerName: string;
+
     /**
      * To upload files to
      * @param {string} bucketName
@@ -44,6 +51,8 @@ export class UploadService {
                         await this.uploadToS3(bucketName, file.fileFullPath, `${uploadPathKey}`);
                     } else if (to === 'azure') {
                         await this.uploadBlob(bucketName, file.fileFullPath, `${uploadPathKey}`);
+                    } else if (to === 'oracle') {
+                        await this.uploadToOracleObjectStorage(process.env.ORACLE_NAMESPACE, bucketName, file.fileFullPath, `${uploadPathKey}`);
                     } else {
                         await this.uploadToMinio(bucketName, file.fileFullPath, `${file.fileName}`, `${uploadPathKey}`)
                     }
@@ -82,14 +91,6 @@ export class UploadService {
         });
     }
 
-    private blobServiceClient;
-    private connectionStr: string;
-    private containerName: string;
-
-    constructor() {
-        
-    }
-
     public async uploadBlob(container: string, localFileFullPath: string, uploadFilePath: string) {
         // if the file gets too large convert to stream, currently not much info is there
         /*const containerClientStream = this.blobServiceClient.createWriteStreamToBlockBlob(container, uploadFilePath,
@@ -109,7 +110,6 @@ export class UploadService {
             console.error(`azure-upload.uploadBlob: container - ${container} , localFileFullPath - ${localFileFullPath}, uploadFilePath - ${uploadFilePath} `, e);
         }
     }
-
 
     public async uploadToMinio(bucketName, file, fileName, folderName) {
         let metaData = {
@@ -152,5 +152,18 @@ export class UploadService {
             }
         });
         return fileFullPathToReturn;
+    }
+
+    public async uploadToOracleObjectStorage(nameSpaceName: string, bucketName: string, localFileFullPath: string,
+                                             uploadFilePath: string): Promise<objectstorage.responses.PutObjectResponse> {
+
+        const putObjectRequest: objectstorage.requests.PutObjectRequest = {
+            objectName: uploadFilePath,
+            bucketName: bucketName,
+            namespaceName: nameSpaceName,
+            putObjectBody: fs.createReadStream(localFileFullPath),
+            retryConfiguration: {terminationStrategy: new common.MaxAttemptsTerminationStrategy(3)}
+        };
+        return this.oracleObjectStorageClient.putObject(putObjectRequest);
     }
 }
