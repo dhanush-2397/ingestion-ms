@@ -17,6 +17,8 @@ export class V4DataEmissionService {
                 await this.uploadService.uploadFiles('local', `${process.env.MINIO_BUCKET}`, inputPath, `emission/${folderName}/`, true);
             } else if (process.env.STORAGE_TYPE === 'azure') {
                 await this.uploadService.uploadFiles('azure', `${process.env.AZURE_CONTAINER}`, inputPath, `emission/${folderName}/`, true);
+            } else if (process.env.STORAGE_TYPE === 'oracle') {
+                await this.uploadService.uploadFiles('oracle', `${process.env.ORACLE_BUCKET}`, inputPath, `emission/${folderName}/`, true);
             } else {
                 await this.uploadService.uploadFiles('aws', process.env.AWS_BUCKET, inputPath, `emission/${folderName}/`, true);
             }
