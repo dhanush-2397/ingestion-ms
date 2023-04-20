@@ -18,12 +18,19 @@ interface FileStructure {
 export class UploadService {
 
     // using default provider ~/.oci/config
-    private provider: common.ConfigFileAuthenticationDetailsProvider = new common.ConfigFileAuthenticationDetailsProvider();
-    private oracleObjectStorageClient = new objectstorage.ObjectStorageClient({authenticationDetailsProvider: this.provider});
+    private provider: common.ConfigFileAuthenticationDetailsProvider;
+    private oracleObjectStorageClient;
 
     private blobServiceClient;
     private connectionStr: string;
     private containerName: string;
+
+    constructor() {
+        if (process.env.STORAGE_TYPE === 'oracle') {
+            this.provider = new common.ConfigFileAuthenticationDetailsProvider();
+            this.oracleObjectStorageClient = new objectstorage.ObjectStorageClient({authenticationDetailsProvider: this.provider});
+        }
+    }
 
     /**
      * To upload files to
@@ -156,14 +163,18 @@ export class UploadService {
 
     public async uploadToOracleObjectStorage(nameSpaceName: string, bucketName: string, localFileFullPath: string,
                                              uploadFilePath: string): Promise<objectstorage.responses.PutObjectResponse> {
+        if (this.oracleObjectStorageClient) {
+            const putObjectRequest: objectstorage.requests.PutObjectRequest = {
+                objectName: uploadFilePath,
+                bucketName: bucketName,
+                namespaceName: nameSpaceName,
+                putObjectBody: fs.createReadStream(localFileFullPath),
+                retryConfiguration: {terminationStrategy: new common.MaxAttemptsTerminationStrategy(3)}
+            };
+            return this.oracleObjectStorageClient.putObject(putObjectRequest);
+        } else {
+            throw new Error('Oracle object storage not initialized ... Current store Config = ' + process.env.STORAGE_TYPE)
+        }
 
-        const putObjectRequest: objectstorage.requests.PutObjectRequest = {
-            objectName: uploadFilePath,
-            bucketName: bucketName,
-            namespaceName: nameSpaceName,
-            putObjectBody: fs.createReadStream(localFileFullPath),
-            retryConfiguration: {terminationStrategy: new common.MaxAttemptsTerminationStrategy(3)}
-        };
-        return this.oracleObjectStorageClient.putObject(putObjectRequest);
     }
 }
