@@ -177,7 +177,7 @@ export class IngestionController {
 
     @UseInterceptors(FileInterceptor('file', {
         storage: diskStorage({
-            destination: './emission-files',
+            destination: './temp-files',
             filename: (req, file, cb) => {
                 cb(null, `${file.originalname}`);
             }
