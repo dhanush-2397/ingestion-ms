@@ -70,7 +70,7 @@ export const IngestionDatasetQuery = {
     },
     async updateTotalCounter(fileTrackerPid) {
         const queryStr = `UPDATE ingestion."FileTracker"
-        SET total_data_count = processed_data_count + error_data_count
+        SET total_data_count = COALESCE(processed_data_count,0) + COALESCE(error_data_count,0)
        WHERE pid = $1;`;
         return {query: queryStr, values: [fileTrackerPid]};
     }
