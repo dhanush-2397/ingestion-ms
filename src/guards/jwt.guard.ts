@@ -24,7 +24,7 @@ export class JwtGuard implements CanActivate {
       const decoded = jwt.verify(token, process.env.JWT_SECRET,function(err,decoded){
         if(err)
         {
-          throw new Error(err);
+          throw err;
         }
       });
       return decoded;
