@@ -6,6 +6,7 @@ import {Result} from "../../interfaces/Ingestion-data";
 import {IngestionDatasetQuery} from "../../query/ingestionQuery";
 import {UploadService} from "../file-uploader-service";
 import * as AdmZip from 'adm-zip';
+import {ReadStream} from "fs";
 
 const fs = require('fs');
 const {parse} = require('@fast-csv/parse');
@@ -29,48 +30,15 @@ export class DataEmissionService {
             let filePath;
             if (queryResult?.length === 1) {
                 let fileTrackerPid = queryResult[0].pid;
-                let folderName = await this.service.getDate();
+
                 let validArray = [], records;
                 let result = await this.getSchema(uploadedFileName, fileTrackerPid);
                 if (result.code === 200) {
-                    records = await this.validationFunction(`./temp-files/` + uploadedFileName + ".csv", result.data, uploadedFileName, fileTrackerPid);
+                    records = this.validationFunction(`./temp-files/` + uploadedFileName + ".csv", result.data, uploadedFileName, fileTrackerPid, uploadedFileName);
+                    resolve({code: 200, message: 'File is being processed'})
                 } else {
                     resolve({code: 400, error: `Schema doesn't exists for this program`});
                 }
-
-                if (records.validCounter > 0) {
-                    filePath = `./emission-files/` + uploadedFileName + ".csv";
-                    if (process.env.STORAGE_TYPE === 'local') {
-                        await this.uploadService.uploadFiles('local', `${process.env.MINIO_BUCKET}`, filePath, `emission/${folderName}/`);
-                    } else if (process.env.STORAGE_TYPE === 'azure') {
-                        await this.uploadService.uploadFiles('azure', `${process.env.AZURE_CONTAINER}`, filePath, `emission/${folderName}/`);
-                    } else if (process.env.STORAGE_TYPE === 'oracle') {
-                        await this.uploadService.uploadFiles('oracle', `${process.env.ORACLE_BUCKET}`, filePath, `emission/${folderName}/`);
-                    } else {
-                        await this.uploadService.uploadFiles('aws', `${process.env.AWS_BUCKET}`, filePath, `emission/${folderName}/`);
-                    }
-                }
-                if (records.invalidCounter > 0) {
-                    filePath = `./error-files/` + uploadedFileName + "_errors.csv";
-                    if (process.env.STORAGE_TYPE === 'local') {
-                        await this.uploadService.uploadFiles('local', `${process.env.MINIO_BUCKET}`, filePath, `emission-error/${folderName}/`);
-                    } else if (process.env.STORAGE_TYPE === 'azure') {
-                        await this.uploadService.uploadFiles('azure', `${process.env.AZURE_CONTAINER}`, filePath, `emission-error/${folderName}/`);
-                    } else if (process.env.STORAGE_TYPE === 'oracle') {
-                        await this.uploadService.uploadFiles('oracle', `${process.env.ORACLE_BUCKET}`, filePath, `emission-error/${folderName}/`);
-                    } else {
-                        await this.uploadService.uploadFiles('aws', `${process.env.AWS_BUCKET}`, filePath, `emission-error/${folderName}/`);
-                    }
-                }
-
-                const queryStr = await IngestionDatasetQuery.updateFileTracker(fileTrackerPid, 'Uploaded', uploadedFileName);
-                await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
-
-                await this.service.deleteLocalFile(`./emission-files/` + uploadedFileName + ".csv");
-                await this.service.deleteLocalFile(`./error-files/` + uploadedFileName + "_errors.csv");
-                await this.service.deleteLocalFile(`./temp-files/` + uploadedFileName + ".csv");
-                await this.service.deleteLocalFile(`./temp-files/` + uploadedFileName + ".zip");
-                resolve({code: 200, message: 'File uploaded successfully'})
             } else {
                 resolve({code: 400, error: 'File is not Tracked'})
             }
@@ -98,7 +66,7 @@ export class DataEmissionService {
         }
     }
 
-    async validationFunction(fileCompletePath, schema, ingestionName, fileTrackerPid) {
+    async validationFunction(fileCompletePath, schema, ingestionName, fileTrackerPid, uploadedFileName) {
         return new Promise(async (resolve, reject) => {
             let validArray = [], invalidArray = [];
             let errorCounter = 0, validCounter = 0;
@@ -108,7 +76,7 @@ export class DataEmissionService {
 
             const csvReadStream = fs.createReadStream(fileCompletePath)
                 .pipe(parse({headers: true}))
-                .on('data', (csvrow) => {
+                .on('data', async (csvrow) => {
                     this.service.formatDataToCSVBySchema(csvrow, schema, false);
                     batchCounter++;
                     ingestionTypeBodyArray.push({...csvrow});
@@ -128,6 +96,9 @@ export class DataEmissionService {
                                 }
                                 ingestionTypeBodyArray = []
                             }
+                            await this.writeToCsv(ingestionName, invalidArray, errorCounter, validArray, validCounter, fileTrackerPid, csvReadStream, false);
+                            validArray = [];
+                            invalidArray = [];
                         }
                     }
                 })
@@ -147,6 +118,7 @@ export class DataEmissionService {
                     try {
                         // flush the remaining csv data to API
                         if (ingestionTypeBodyArray.length > 0) {
+                            batchCounter = 0;
                             for (let record of ingestionTypeBodyArray) {
                                 const isValidSchema: any = this.service.ajvValidator(schema, record);
                                 if (isValidSchema.errors) {
@@ -158,28 +130,46 @@ export class DataEmissionService {
                                     validCounter = validCounter + 1;
                                 }
                             }
-                            let file;
-                            if (invalidArray) {
-                                file = `./error-files/` + ingestionName + '_errors.csv';
-                                await this.service.writeToCSVFile(file, invalidArray);
-                            }
-                            if (validArray) {
-                                file = `./emission-files/` + ingestionName + '.csv';
-                                await this.service.writeToCSVFile(file, validArray);
-                            }
-                            let queryStr = await IngestionDatasetQuery.updateFileTracker(fileTrackerPid, 'Uploaded', ingestionName);
-                            await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
-
-                            queryStr = await IngestionDatasetQuery.updateCounter(fileTrackerPid, validCounter, '');
-                            await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
-
-                            queryStr = await IngestionDatasetQuery.updateCounter(fileTrackerPid, '', errorCounter);
-                            await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
-
-                            queryStr = await IngestionDatasetQuery.updateTotalCounter(fileTrackerPid);
-                            await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
                         }
-                        resolve({message: 'Success', validCounter: validCounter, invalidCounter: errorCounter});
+                        await this.writeToCsv(ingestionName, invalidArray, errorCounter, validArray, validCounter, fileTrackerPid, csvReadStream, true);
+                        let filePath;
+                        let folderName = await this.service.getDate();
+                        if (validCounter > 0) {
+                            filePath = `./emission-files/` + uploadedFileName + ".csv";
+                            if (process.env.STORAGE_TYPE === 'local') {
+                                await this.uploadService.uploadFiles('local', `${process.env.MINIO_BUCKET}`, filePath, `emission/${folderName}/`);
+                            } else if (process.env.STORAGE_TYPE === 'azure') {
+                                await this.uploadService.uploadFiles('azure', `${process.env.AZURE_CONTAINER}`, filePath, `emission/${folderName}/`);
+                            } else if (process.env.STORAGE_TYPE === 'oracle') {
+                                await this.uploadService.uploadFiles('oracle', `${process.env.ORACLE_BUCKET}`, filePath, `emission/${folderName}/`);
+                            } else {
+                                await this.uploadService.uploadFiles('aws', `${process.env.AWS_BUCKET}`, filePath, `emission/${folderName}/`);
+                            }
+                        }
+                        if (errorCounter > 0) {
+                            filePath = `./error-files/` + uploadedFileName + "_errors.csv";
+                            if (process.env.STORAGE_TYPE === 'local') {
+                                await this.uploadService.uploadFiles('local', `${process.env.MINIO_BUCKET}`, filePath, `emission-error/${folderName}/`);
+                            } else if (process.env.STORAGE_TYPE === 'azure') {
+                                await this.uploadService.uploadFiles('azure', `${process.env.AZURE_CONTAINER}`, filePath, `emission-error/${folderName}/`);
+                            } else if (process.env.STORAGE_TYPE === 'oracle') {
+                                await this.uploadService.uploadFiles('oracle', `${process.env.ORACLE_BUCKET}`, filePath, `emission-error/${folderName}/`);
+                            } else {
+                                await this.uploadService.uploadFiles('aws', `${process.env.AWS_BUCKET}`, filePath, `emission-error/${folderName}/`);
+                            }
+                        }
+
+                        const queryStr = await IngestionDatasetQuery.updateFileTracker(fileTrackerPid, 'Uploaded', uploadedFileName);
+                        await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
+                        if (validCounter > 0) {
+                            await this.service.deleteLocalFile(`./emission-files/` + uploadedFileName + ".csv");
+                        }
+                        if (errorCounter > 0) {
+                            await this.service.deleteLocalFile(`./error-files/` + uploadedFileName + "_errors.csv");
+                        }
+                        await this.service.deleteLocalFile(`./temp-files/` + uploadedFileName + ".csv");
+                        await this.service.deleteLocalFile(`./temp-files/` + uploadedFileName + ".zip");
+                        resolve({code: 200, message: 'File uploaded successfully'})
                     } catch (apiErr) {
                         apiResponseDataList = undefined;
                         let apiErrorData: any = {};
@@ -193,5 +183,39 @@ export class DataEmissionService {
                     }
                 });
         });
+    }
+
+    async writeToCsv(ingestionName, invalidArray, errorCounter, validArray, validCounter, fileTrackerPid, csvReadStream: ReadStream, isEnd = false) {
+        try {
+            console.log('11111: ');
+            let file, queryStr;
+            if (errorCounter > 0) {
+                file = `./error-files/` + ingestionName + '_errors.csv';
+                await this.service.writeToCSVFile(file, invalidArray);
+
+                queryStr = await IngestionDatasetQuery.updateCounter(fileTrackerPid, '', errorCounter);
+                await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
+            }
+            if (validCounter > 0) {
+                file = `./emission-files/` + ingestionName + '.csv';
+                await this.service.writeToCSVFile(file, validArray);
+                queryStr = await IngestionDatasetQuery.updateCounter(fileTrackerPid, validCounter, '');
+                await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
+            }
+
+            queryStr = await IngestionDatasetQuery.updateTotalCounter(fileTrackerPid);
+            await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
+            console.log(isEnd);
+            if (!isEnd) {
+                csvReadStream.resume();
+            }
+        } catch (apiErr) {
+            if (isEnd) {
+                throw new Error(JSON.stringify(apiErr.response?.data || apiErr.message))
+            } else {
+                csvReadStream.destroy(apiErr.response?.data || apiErr.message);
+            }
+            return;
+        }
     }
 }
