@@ -167,7 +167,16 @@ export class DataEmissionService {
                                 file = `./emission-files/` + ingestionName + '.csv';
                                 await this.service.writeToCSVFile(file, validArray);
                             }
-                            const queryStr = await IngestionDatasetQuery.updateFileTracker(fileTrackerPid, 'Uploaded', ingestionName);
+                            let queryStr = await IngestionDatasetQuery.updateFileTracker(fileTrackerPid, 'Uploaded', ingestionName);
+                            await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
+
+                            queryStr = await IngestionDatasetQuery.updateCounter(fileTrackerPid, validCounter, '');
+                            await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
+
+                            queryStr = await IngestionDatasetQuery.updateCounter(fileTrackerPid, '', errorCounter);
+                            await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
+
+                            queryStr = await IngestionDatasetQuery.updateTotalCounter(fileTrackerPid);
                             await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
                         }
                         resolve({message: 'Success', validCounter: validCounter, invalidCounter: errorCounter});
