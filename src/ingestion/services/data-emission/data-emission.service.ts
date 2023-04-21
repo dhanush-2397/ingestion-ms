@@ -90,7 +90,7 @@ export class DataEmissionService {
                                     invalidArray.push(record);
                                     errorCounter = errorCounter + 1;
                                 } else {
-                                    validArray.push(this.service.formatDataToCSVBySchema(record, schema));
+                                    validArray.push(await this.service.formatDataToCSVBySchema(record, schema));
                                     validCounter = validCounter + 1;
                                 }
                                 ingestionTypeBodyArray = []
