@@ -48,7 +48,6 @@ ajv.addKeyword('stripNewline', {
             if (typeof data === 'string') {
                 return data.replace(/\n/g, '');
             }
-            console.log('generic-function.: ', data);
             return data;
         };
     },
