@@ -73,7 +73,6 @@ export class DataEmissionService {
             const batchLimit: number = 100000;
             let batchCounter: number = 0,
                 ingestionTypeBodyArray: any = [], apiResponseDataList: any[] = [];
-
             const csvReadStream = fs.createReadStream(fileCompletePath)
                 .pipe(parse({headers: true}))
                 .on('data', async (csvrow) => {
@@ -187,7 +186,6 @@ export class DataEmissionService {
 
     async writeToCsv(ingestionName, invalidArray, errorCounter, validArray, validCounter, fileTrackerPid, csvReadStream: ReadStream, isEnd = false) {
         try {
-            console.log('11111: ');
             let file, queryStr;
             if (errorCounter > 0) {
                 file = `./error-files/` + ingestionName + '_errors.csv';
@@ -205,7 +203,6 @@ export class DataEmissionService {
 
             queryStr = await IngestionDatasetQuery.updateTotalCounter(fileTrackerPid);
             await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
-            console.log(isEnd);
             if (!isEnd) {
                 csvReadStream.resume();
             }
