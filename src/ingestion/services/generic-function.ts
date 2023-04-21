@@ -48,7 +48,6 @@ ajv.addKeyword('stripNewline', {
             if (typeof data === 'string') {
                 return data.replace(/\n/g, '');
             }
-            console.log('generic-function.: ', data);
             return data;
         };
     },
@@ -118,7 +117,7 @@ export class GenericFunction {
     }
 
     async removeNewLine(input) {
-        return input.replace(/\n/g, '');
+        return input.replace(/\n/g, '').replace('\'','');
     }
 
     async getDate() {
