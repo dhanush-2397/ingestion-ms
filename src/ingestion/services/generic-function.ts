@@ -34,6 +34,26 @@ ajv.addKeyword({
     }
 });
 
+ajv.addKeyword('stripNewline', {
+    keyword: 'stripNewline',
+    type: 'string',
+    validate: (schema, data) => {
+        if (typeof data === 'string') {
+            return true;
+        }
+        return false;
+    },
+    compile: (schema, parentSchema) => {
+        return (data) => {
+            if (typeof data === 'string') {
+                return data.replace(/\n/g, '');
+            }
+            return data;
+        };
+    },
+});
+
+
 @Injectable()
 export class GenericFunction {
 
@@ -83,16 +103,21 @@ export class GenericFunction {
 
     async formatDataToCSVBySchema(input: any, schema: InputSchema, addQuotes = true) {
         const {properties} = schema;
-        Object.keys(input).forEach(property => {
+        Object.keys(input).forEach(async property => {
             if (properties[property]) {
                 if (addQuotes && properties[property].type === 'string') {
-                    input[property] = `'${input[property]}'`;
+                    let inputData = await this.removeNewLine(`${input[property]}`);
+                    input[property] = `'${inputData}'`;
                 } else if (properties[property].type === 'integer' || properties[property].type === 'number' || properties[property].type === 'float') {
                     input[property] = Number(input[property]);
                 }
             }
         });
         return input;
+    }
+
+    async removeNewLine(input) {
+        return input.replace(/\n/g, '').replace('\'','');
     }
 
     async getDate() {
