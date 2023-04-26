@@ -103,10 +103,10 @@ export class GenericFunction {
 
     async formatDataToCSVBySchema(input: any, schema: InputSchema, addQuotes = true) {
         const {properties} = schema;
-        Object.keys(input).forEach(async property => {
+        Object.keys(input).forEach(property => {
             if (properties[property]) {
                 if (addQuotes && properties[property].type === 'string') {
-                    let inputData = await this.removeNewLine(`${input[property]}`);
+                    let inputData = this.removeNewLine(`${input[property]}`);
                     input[property] = `'${inputData}'`;
                 } else if (properties[property].type === 'integer' || properties[property].type === 'number' || properties[property].type === 'float') {
                     input[property] = Number(input[property]);
@@ -116,7 +116,7 @@ export class GenericFunction {
         return input;
     }
 
-    async removeNewLine(input) {
+    removeNewLine(input) {
         return input.replace(/\n/g, '').replace('\'','');
     }
 
