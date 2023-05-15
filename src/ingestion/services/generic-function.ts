@@ -23,6 +23,17 @@ ajv.addKeyword({
     }
 });
 ajv.addKeyword({
+    keyword: 'shouldNotNull',
+    validate: (schema, data) => {
+        if (schema) {
+            if (typeof data === 'object') return typeof data === 'object' && Object.keys(data).length > 0
+            if (typeof data === 'string') return typeof data === 'string' && data.trim() !== ''
+            if (typeof data === 'number') return typeof data === 'number'
+        }
+        else return true;
+    }
+});
+ajv.addKeyword({
     keyword: 'unique',
     validate: (schema, data) => {
         if (schema) {
