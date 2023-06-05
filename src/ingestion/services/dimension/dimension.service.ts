@@ -32,14 +32,11 @@ export class DimensionService {
                             }
                         }
 
-                        let fileName = dimensionName;
-                        if (inputData?.file_tracker_pid) {
-                            fileName = dimensionName + `_${inputData?.file_tracker_pid}`;
-                        }
+                                           
                         let file;
                         let folderName = await this.service.getDate();
                         if (invalidArray.length > 0) {
-                            file = `./error-files/` + fileName + '_errors.csv';
+                            file = `./error-files/` + dimensionName + '-dimension.data_errors.csv';
                             await this.service.writeToCSVFile(file, invalidArray);
 
                             if (process.env.STORAGE_TYPE === 'local') {
@@ -59,17 +56,17 @@ export class DimensionService {
                             }
                         }
                         if (validArray.length > 0) {
-                            file = `./input-files/` + fileName + '.csv';
+                            file = `./input-files/` + dimensionName + '-dimension.data.csv';
                             await this.service.writeToCSVFile(file, validArray);
 
                             if (process.env.STORAGE_TYPE === 'local') {
-                                await this.uploadService.uploadFiles('local', `${process.env.MINIO_BUCKET}`, file, `combined_input/${dimensionName}/${folderName}/`);
+                                await this.uploadService.uploadFiles('local', `${process.env.MINIO_BUCKET}`, file, `process_input/dimensions/${folderName}/`);
                             } else if (process.env.STORAGE_TYPE === 'azure') {
-                                await this.uploadService.uploadFiles('azure', `${process.env.AZURE_CONTAINER}`, file, `combined_input/${dimensionName}/${folderName}/`);
+                                await this.uploadService.uploadFiles('azure', `${process.env.AZURE_CONTAINER}`, file, `process_input/dimensions/${folderName}/`);
                             } else if (process.env.STORAGE_TYPE === 'oracle') {
-                                await this.uploadService.uploadFiles('oracle', `${process.env.ORACLE_BUCKET}`, file, `combined_input/${dimensionName}/${folderName}/`);
+                                await this.uploadService.uploadFiles('oracle', `${process.env.ORACLE_BUCKET}`, file, `process_input/dimensions/${folderName}/`);
                             } else {
-                                await this.uploadService.uploadFiles('aws', `${process.env.AWS_BUCKET}`, file, `combined_input/${dimensionName}/${folderName}/`);
+                                await this.uploadService.uploadFiles('aws', `${process.env.AWS_BUCKET}`, file, `process_input/dimensions/${folderName}/`);
                             }
 
                             if (inputData?.file_tracker_pid) {
