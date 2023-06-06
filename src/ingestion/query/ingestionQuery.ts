@@ -4,7 +4,7 @@ export const IngestionDatasetQuery = {
         return {query: queryStr, values: [datasetName]};
     },
     async getDimension(dimensionName) {
-        const queryStr = `SELECT schema FROM spec."DimensionGrammar" WHERE program = $1`;
+        const queryStr = `SELECT schema FROM spec."DimensionGrammar" WHERE name = $1`;
         return {query: queryStr, values: [dimensionName]};
     },
     async getEvents(eventName) {
