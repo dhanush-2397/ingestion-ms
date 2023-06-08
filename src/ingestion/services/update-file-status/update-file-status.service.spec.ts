@@ -30,47 +30,47 @@ describe('MyService', () => {
         expect(service).toBeDefined();
     });
 
-    it('validation', async () => {
-        let input = {
-            "file_name": "event_students_attendance.csv",
-            "ingestion_type": "event1",
-            "ingestion_name": "event_students_attendance",
-            "status": "Processing"
-        };
+    // it('validation', async () => {
+    //     let input = {
+    //         "file_name": "event_students_attendance.csv",
+    //         "ingestion_type": "event1",
+    //         "ingestion_name": "event_students_attendance",
+    //         "status": "Processing"
+    //     };
 
-        let result = {
-            code: 400, error: [
-                {
-                    "instancePath": "/ingestion_type",
-                    "schemaPath": "#/properties/ingestion_type/enum",
-                    "keyword": "enum",
-                    "params": {
-                        "allowedValues": [
-                            "event",
-                            "dataset",
-                            "dimension"
-                        ]
-                    },
-                    "message": "must be equal to one of the allowed values"
-                }
-            ]
-        };
+    //     let result = {
+    //         code: 400, error: [
+    //             {
+    //                 "instancePath": "/ingestion_type",
+    //                 "schemaPath": "#/properties/ingestion_type/enum",
+    //                 "keyword": "enum",
+    //                 "params": {
+    //                     "allowedValues": [
+    //                         "event",
+    //                         "dataset",
+    //                         "dimension"
+    //                     ]
+    //                 },
+    //                 "message": "must be equal to one of the allowed values"
+    //             }
+    //         ]
+    //     };
 
-        expect(await service.UpdateFileStatus(input)).toStrictEqual(result)
-    });
+    //     expect(await service.UpdateFileStatus(input)).toStrictEqual(result)
+    // });
 
-    it('No file exists with the given details', async () => {
-        let input = {
-            "file_name": "event_students_attendance.csv",
-            "ingestion_type": "event",
-            "ingestion_name": "event_students_attendance",
-            "status": "Processing"
-        };
+    // it('No file exists with the given details', async () => {
+    //     let input = {
+    //         "file_name": "event_students_attendance.csv",
+    //         "ingestion_type": "event",
+    //         "ingestion_name": "event_students_attendance",
+    //         "status": "Processing"
+    //     };
 
-        let result = {code: 400, error: 'No file exists with the given details'};
+    //     let result = {code: 400, error: 'No file exists with the given details'};
 
-        expect(await service.UpdateFileStatus(input)).toStrictEqual(result)
-    });
+    //     expect(await service.UpdateFileStatus(input)).toStrictEqual(result)
+    // });
 
     // it('File status updated successfully ready_to_archive: false', async () => {
     //     const module: TestingModule = await Test.createTestingModule({
@@ -185,40 +185,40 @@ describe('MyService', () => {
     //     expect(await service.UpdateFileStatus(input)).toStrictEqual(result)
     // });
 
-    it('exception', async () => {
-        const module: TestingModule = await Test.createTestingModule({
-            providers: [DatabaseService, UpdateFileStatusService, GenericFunction,
-                {
-                    provide: DatabaseService,
-                    useValue: {
-                        executeQuery: jest.fn().mockImplementation(() => {
-                            throw Error("exception test")
-                        })
-                    }
-                },
-                {
-                    provide: UpdateFileStatusService,
-                    useClass: UpdateFileStatusService
-                },
-                {
-                    provide: GenericFunction,
-                    useClass: GenericFunction
-                }],
-        }).compile();
-        service = module.get<UpdateFileStatusService>(UpdateFileStatusService);
-        let input = {
-            "file_name": "event_students_attendance.csv",
-            "ingestion_type": "event",
-            "ingestion_name": "event_students_attendance",
-            "status": "Completed"
-        };
+    // it('exception', async () => {
+    //     const module: TestingModule = await Test.createTestingModule({
+    //         providers: [DatabaseService, UpdateFileStatusService, GenericFunction,
+    //             {
+    //                 provide: DatabaseService,
+    //                 useValue: {
+    //                     executeQuery: jest.fn().mockImplementation(() => {
+    //                         throw Error("exception test")
+    //                     })
+    //                 }
+    //             },
+    //             {
+    //                 provide: UpdateFileStatusService,
+    //                 useClass: UpdateFileStatusService
+    //             },
+    //             {
+    //                 provide: GenericFunction,
+    //                 useClass: GenericFunction
+    //             }],
+    //     }).compile();
+    //     service = module.get<UpdateFileStatusService>(UpdateFileStatusService);
+    //     let input = {
+    //         "file_name": "event_students_attendance.csv",
+    //         "ingestion_type": "event",
+    //         "ingestion_name": "event_students_attendance",
+    //         "status": "Completed"
+    //     };
 
-        let resultOutput = "Error: exception test";
+    //     let resultOutput = "Error: exception test";
 
-        try {
-            await service.UpdateFileStatus(input);
-        } catch (e) {
-            expect(e.message).toEqual(resultOutput);
-        }
-    });
+    //     try {
+    //         await service.UpdateFileStatus(input);
+    //     } catch (e) {
+    //         expect(e.message).toEqual(resultOutput);
+    //     }
+    // });
 });

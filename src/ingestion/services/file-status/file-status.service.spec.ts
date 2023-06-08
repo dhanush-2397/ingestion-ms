@@ -45,9 +45,9 @@ describe('FileStatusService', () => {
                     "schemaPath": "#/properties/filename/pattern",
                     "keyword": "pattern",
                     "params": {
-                        "pattern": "^.*.(csv)$"
+                        "pattern": "^.*.(csv|zip)$"
                     },
-                    "message": "must match pattern \"^.*.(csv)$\""
+                    "message": "must match pattern \"^.*.(csv|zip)$\""
                 }
             ]
         }
