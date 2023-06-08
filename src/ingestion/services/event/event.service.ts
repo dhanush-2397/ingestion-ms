@@ -61,13 +61,13 @@ export class EventService {
                             await this.service.writeToCSVFile(file, validArray);
 
                             if (process.env.STORAGE_TYPE === 'local') {
-                                await this.uploadService.uploadFiles('local', `${process.env.MINIO_BUCKET}`, file, `combined_input/${eventName}/${folderName}/`);
+                                await this.uploadService.uploadFiles('local', `${process.env.MINIO_BUCKET}`, file, `process_input/${eventName}/${folderName}/`);
                             } else if (process.env.STORAGE_TYPE === 'azure') {
-                                await this.uploadService.uploadFiles('azure', `${process.env.AZURE_CONTAINER}`, file, `combined_input/${eventName}/${folderName}/`);
+                                await this.uploadService.uploadFiles('azure', `${process.env.AZURE_CONTAINER}`, file, `process_input/${eventName}/${folderName}/`);
                             } else if (process.env.STORAGE_TYPE === 'oracle') {
-                                await this.uploadService.uploadFiles('oracle', `${process.env.ORACLE_BUCKET}`, file, `combined_input/${eventName}/${folderName}/`);
+                                await this.uploadService.uploadFiles('oracle', `${process.env.ORACLE_BUCKET}`, file, `process_input/${eventName}/${folderName}/`);
                             } else {
-                                await this.uploadService.uploadFiles('aws', `${process.env.AWS_BUCKET}`, file, `combined_input/${eventName}/${folderName}/`);
+                                await this.uploadService.uploadFiles('aws', `${process.env.AWS_BUCKET}`, file, `process_input/${eventName}/${folderName}/`);
                             }
 
                             if (inputData?.file_tracker_pid) {
