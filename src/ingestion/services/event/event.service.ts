@@ -33,12 +33,12 @@ export class EventService {
                         }
                         let fileName = eventName;
                         if (inputData?.file_tracker_pid) {
-                            fileName = eventName + `_${inputData?.file_tracker_pid}`;
+                            fileName = eventName + `-event.data`;
                         }
                         let file;
                         let folderName = await this.service.getDate();
                         if (invalidArray.length > 0) {
-                            file = `./error-files/` + fileName + '_errors.csv';
+                            file = `./error-files/` + `${eventName +'_' + inputData?.file_tracker_pid}` + '_errors.csv';
                             await this.service.writeToCSVFile(file, invalidArray);
 
                             if (process.env.STORAGE_TYPE === 'local') {
