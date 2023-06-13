@@ -155,8 +155,15 @@ export class CsvImportService {
                             // delete the file
                             try {
                                 await fs.unlinkSync(fileCompletePath);
-                                await this.service.deleteLocalFile(`./input-files/${ingestionName}_${fileTrackerPid}.csv`);
+                                if(ingestionType === 'dimension'){
+                                    await this.service.deleteLocalFile(`./input-files/${ingestionName}-dimension.data.csv`);
+                                }
+                                if(ingestionType === 'event')
+                                {
+                                    await this.service.deleteLocalFile(`./input-files/${ingestionName}-event.data.csv`);
+                                }
                                 await this.service.deleteLocalFile(`./error-files/${ingestionName}_${fileTrackerPid}_errors.csv`);
+                                console.log("error file should be deleted");
                             } catch (e) {
                                 console.error('csvImport.service.file delete error: ', e);
                             }
