@@ -118,6 +118,7 @@ export class GenericFunction {
             if (properties[property]) {
                 if (addQuotes && properties[property].type === 'string') {
                     let inputData = this.removeNewLine(`${input[property]}`);
+                    inputData = inputData.replace(/"/g,'');
                     input[property] = `'${inputData}'`;
                 } else if (properties[property].type === 'integer' || properties[property].type === 'number' || properties[property].type === 'float') {
                     input[property] = Number(input[property]);

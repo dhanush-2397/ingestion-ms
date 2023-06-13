@@ -12,7 +12,7 @@ export class EventService {
     async createEvent(inputData) {
         try {
             if (inputData.event_name) {
-                const eventName = inputData.event_name;
+                let eventName = inputData.event_name;
                 let queryStr = await IngestionDatasetQuery.getEvents(eventName);
                 const queryResult = await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
                 if (queryResult?.length === 1) {
@@ -36,6 +36,9 @@ export class EventService {
                             fileName = eventName + `-event.data`;
                         }
                         let file;
+                        if(inputData?.program_name){
+                            eventName = inputData?.program_name;
+                        }
                         let folderName = await this.service.getDate();
                         if (invalidArray.length > 0) {
                             file = `./error-files/` + `${eventName +'_' + inputData?.file_tracker_pid}` + '_errors.csv';
@@ -55,6 +58,8 @@ export class EventService {
                                 queryStr = await IngestionDatasetQuery.updateCounter(inputData.file_tracker_pid, '', errorCounter);
                                 await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
                             }
+
+                            
                         }
                         if (validArray.length > 0) {
                             file = `./input-files/` + fileName + '.csv';
