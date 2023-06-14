@@ -75,6 +75,7 @@ export class GenericFunction {
 
     // creating a lock to wait
     async writeToCSVFile(fileName, inputArray) {
+        return new Promise( async (resolve, reject) => {
         try {
             do {
                 // check is the lock is released
@@ -95,16 +96,19 @@ export class GenericFunction {
                     console.log('CSV file has been written successfully');
                     // delete the lock after writing
                     delete this.currentlyLockedFiles[fileName];
-                    return
+                    resolve('done')
                 })
                 .on('error', (err) => {
                     console.error('Error writing CSV file:', err);
+                    reject(err)
                 });
         } catch (e) {
             console.error('writeToCSVFile: ', e.message);
             throw new Error(e);
         }
-    }
+    });
+
+} 
 
     ajvValidator(schema, inputData) {
         const isValid = ajv.validate(schema, inputData);
