@@ -90,7 +90,7 @@ export class GenericFunction {
             this.currentlyLockedFiles[fileName] = true;
 
             const stream = fs.createWriteStream(fileName);
-            await csv.write(inputArray, { headers: true, quote: false })
+            await csv.write(inputArray, { headers: true})
                 .pipe(stream)
                 .on('finish', () => {
                     console.log('CSV file has been written successfully');
