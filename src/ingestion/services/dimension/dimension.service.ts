@@ -22,7 +22,7 @@ export class DimensionService {
                         for (let record of inputData.dimension) {
                             const isValidSchema: any = await this.service.ajvValidator(queryResult[0].schema, record);
                             if (isValidSchema.errors) {
-                                record['error_description'] = isValidSchema.errors;
+                                record['error_description'] = isValidSchema.errors.map(error => error.message);//push the records with error description
                                 invalidArray.push(record);
                                 errorCounter = errorCounter + 1;
                             } else {
@@ -66,7 +66,7 @@ export class DimensionService {
                             } else if (process.env.STORAGE_TYPE === 'oracle') {
                                 await this.uploadService.uploadFiles('oracle', `${process.env.ORACLE_BUCKET}`, file, `process_input/dimensions/${folderName}/`);
                             } else {
-                                await this.uploadService.uploadFiles('aws', `${process.env.AWS_BUCKET}`, file, `process_input/dimensions/${folderName}/`);
+                                // await this.uploadService.uploadFiles('aws', `${process.env.AWS_BUCKET}`, file, `process_input/dimensions/${folderName}/`);
                             }
 
                             if (inputData?.file_tracker_pid) {
