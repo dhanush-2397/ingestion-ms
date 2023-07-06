@@ -66,7 +66,7 @@ export class DimensionService {
                             } else if (process.env.STORAGE_TYPE === 'oracle') {
                                 await this.uploadService.uploadFiles('oracle', `${process.env.ORACLE_BUCKET}`, file, `process_input/dimensions/${folderName}/`);
                             } else {
-                                // await this.uploadService.uploadFiles('aws', `${process.env.AWS_BUCKET}`, file, `process_input/dimensions/${folderName}/`);
+                                await this.uploadService.uploadFiles('aws', `${process.env.AWS_BUCKET}`, file, `process_input/dimensions/${folderName}/`);
                             }
 
                             if (inputData?.file_tracker_pid) {
