@@ -121,6 +121,8 @@ export class CSVBody {
     ingestion_type: string;
     @ApiProperty({type: 'string'})
     ingestion_name: string;
+    @ApiProperty({type: 'string'})
+    program_name: string;
 }
 
 export class FileStatusInterface {

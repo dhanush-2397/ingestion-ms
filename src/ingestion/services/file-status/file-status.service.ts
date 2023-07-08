@@ -15,7 +15,7 @@ export class FileStatusService {
                     "properties": {
                         "filename": {
                             "type": "string",
-                            "pattern":"^.*\.(csv)$",
+                            "pattern":"^.*\.(csv|zip)$",
                             "shouldnotnull": true
                         },
                         "ingestion_type": {

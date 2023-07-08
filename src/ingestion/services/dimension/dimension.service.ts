@@ -22,7 +22,7 @@ export class DimensionService {
                         for (let record of inputData.dimension) {
                             const isValidSchema: any = await this.service.ajvValidator(queryResult[0].schema, record);
                             if (isValidSchema.errors) {
-                                record['error_description'] = isValidSchema.errors;
+                                record['error_description'] = isValidSchema.errors.map(error => error.message);//push the records with error description
                                 invalidArray.push(record);
                                 errorCounter = errorCounter + 1;
                             } else {
@@ -36,7 +36,7 @@ export class DimensionService {
                         let file;
                         let folderName = await this.service.getDate();
                         if (invalidArray.length > 0) {
-                            file = `./error-files/` + dimensionName + '-dimension.data_errors.csv';
+                            file = `./error-files/` + `${dimensionName}_${inputData?.file_tracker_pid}_errors.csv`;
                             await this.service.writeToCSVFile(file, invalidArray);
 
                             if (process.env.STORAGE_TYPE === 'local') {
