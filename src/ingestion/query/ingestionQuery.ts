@@ -73,5 +73,10 @@ export const IngestionDatasetQuery = {
         SET total_data_count = COALESCE(processed_data_count,0) + COALESCE(error_data_count,0)
        WHERE pid = $1;`;
         return {query: queryStr, values: [fileTrackerPid]};
+    },
+    async getCounter(fileTrackerPid){
+        const queryStr = `SELECT total_data_count, processed_data_count,error_data_count FROM
+        ingestion."FileTracker" where pid = $1`;
+        return {query:queryStr,values: [fileTrackerPid]};
     }
 };

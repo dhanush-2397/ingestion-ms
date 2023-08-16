@@ -54,6 +54,9 @@ export class DimensionService {
                         }    
 
                             if (inputData?.file_tracker_pid) {
+                                let errorCountQuery = await IngestionDatasetQuery.getCounter(inputData?.file_tracker_pid)
+                                let result = await this.DatabaseService.executeQuery(errorCountQuery.query, errorCountQuery.values);
+                                errorCounter = errorCounter + (+ result[0]?.error_data_count);
                                 queryStr = await IngestionDatasetQuery.updateCounter(inputData.file_tracker_pid, '', errorCounter);
                                 await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
                             }
@@ -73,6 +76,9 @@ export class DimensionService {
                             }
                          }    
                             if (inputData?.file_tracker_pid) {
+                                let processCountQuery = await IngestionDatasetQuery.getCounter(inputData?.file_tracker_pid)
+                                let result = await this.DatabaseService.executeQuery(processCountQuery.query, processCountQuery.values);
+                                validCounter = validCounter + (+ result[0]?.processed_data_count);
                                 queryStr = await IngestionDatasetQuery.updateCounter(inputData.file_tracker_pid, validCounter, '');
                                 await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
                             }
