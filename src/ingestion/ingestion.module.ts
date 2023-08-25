@@ -14,11 +14,12 @@ import {DataEmissionService} from "./services/data-emission/data-emission.servic
 import {V4DataEmissionService} from "./services/v4-data-emission/v4-data-emission.service";
 import {UploadService} from "./services/file-uploader-service";
 import { RawDataImportService } from './services/rawDataImport/rawDataImport.service';
+import { NvskApiService } from './services/nvsk-api/nvsk-api.service';
 
 @Module({
     controllers: [IngestionController],
     providers: [DatasetService, DimensionService, EventService, GenericFunction, HttpCustomService, CsvImportService, FileStatusService,
-        UpdateFileStatusService, DataEmissionService, V4DataEmissionService, UploadService,RawDataImportService],
+        UpdateFileStatusService, DataEmissionService, V4DataEmissionService, UploadService,RawDataImportService,NvskApiService],
     imports: [DatabaseModule, HttpModule]
 })
 export class IngestionModule {
