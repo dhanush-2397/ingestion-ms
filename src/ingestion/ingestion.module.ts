@@ -13,11 +13,12 @@ import {UpdateFileStatusService} from "./services/update-file-status/update-file
 import {DataEmissionService} from "./services/data-emission/data-emission.service";
 import {V4DataEmissionService} from "./services/v4-data-emission/v4-data-emission.service";
 import {UploadService} from "./services/file-uploader-service";
+import { RawDataImportService } from './services/rawDataImport/rawDataImport.service';
 
 @Module({
     controllers: [IngestionController],
     providers: [DatasetService, DimensionService, EventService, GenericFunction, HttpCustomService, CsvImportService, FileStatusService,
-        UpdateFileStatusService, DataEmissionService, V4DataEmissionService, UploadService],
+        UpdateFileStatusService, DataEmissionService, V4DataEmissionService, UploadService,RawDataImportService],
     imports: [DatabaseModule, HttpModule]
 })
 export class IngestionModule {

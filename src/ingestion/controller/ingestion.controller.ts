@@ -7,7 +7,7 @@ import {
     FileStatus,
     IEvent,
     Pipeline,
-    Result, EmissionBody
+    Result, EmissionBody, RawDataPullBody
 } from '../interfaces/Ingestion-data';
 import {
     Body,
@@ -25,6 +25,7 @@ import {
 } from '@nestjs/common';
 import {DatasetService} from '../services/dataset/dataset.service';
 import {DimensionService} from '../services/dimension/dimension.service';
+import {RawDataImportService} from '../services/rawDataImport/rawDataImport.service'
 import {EventService} from '../services/event/event.service';
 import {Response, Request} from 'express';
 import {CsvImportService} from "../services/csvImport/csvImport.service";
@@ -46,7 +47,8 @@ export class IngestionController {
     constructor(
         private datasetService: DatasetService, private dimensionService: DimensionService
         , private eventService: EventService, private csvImportService: CsvImportService, private fileStatus: FileStatusService, private updateFileStatus: UpdateFileStatusService,
-        private databaseService: DatabaseService, private dataEmissionService: DataEmissionService, private v4DataEmissionService: V4DataEmissionService) {
+        private databaseService: DatabaseService, private dataEmissionService: DataEmissionService, private v4DataEmissionService: V4DataEmissionService,
+        private rawDataImportService:RawDataImportService ) {
     }
 
     @Get('generatejwt')
@@ -220,6 +222,18 @@ export class IngestionController {
             }
         } catch (e) {
             console.error('ingestion.controller.v4dataEmission: ', e.message);
+            throw new Error(e);
+        }
+    }
+
+    @Post('/getRawData')
+    @UseGuards(JwtGuard)
+    async getPresignedUrls(@Body() inputData: RawDataPullBody, @Res()response: Response){
+        try {
+            const getUrls = await this.rawDataImportService.readFiles(inputData);
+            response.status(200).send(getUrls)
+        } catch (e) {
+            console.error('ingestion.controller.getRawDataApi: ', e.message);
             throw new Error(e);
         }
     }

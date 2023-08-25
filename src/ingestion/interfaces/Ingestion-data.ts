@@ -159,3 +159,15 @@ export class EmissionBody {
     @ApiProperty({type: 'string', format: 'binary', required: true})
     file: Express.Multer.File;
 }
+
+export class RawDataPullBody{
+    @ApiProperty()
+    program_names: string[];
+    @ApiProperty()
+    token:string;
+}
+
+export interface RawDataResponse {
+    code: number,
+    data:any
+}
