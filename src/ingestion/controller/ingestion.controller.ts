@@ -232,6 +232,7 @@ export class IngestionController {
     @UseGuards(JwtGuard)
     async getPresignedUrls(@Body() inputData: RawDataPullBody, @Res()response: Response){
         try {
+
             const getUrls = await this.rawDataImportService.readFiles(inputData);
             response.status(200).send(getUrls)
         } catch (e) {
@@ -243,15 +244,18 @@ export class IngestionController {
     async fetchData(@Body()inputData: NvskApiService,@Res()response: Response){
         try {
             const result: any = await this.nvskService.getEmitterData();
-            if (result.code == 400) {
+            console.log("result is", result);
+            if (result?.code == 400) {
                 response.status(400).send({message: result.error});
             } else {
-                response.status(200).send({message: result});
+                response.status(200).send({message: result.message});
             }
         } catch (e) {
-            console.error('ingestion.controller.v4dataEmission: ', e.message);
+            console.error('ingestion.controller.nvskAPI service: ', e.message);
             throw new Error(e);
         }
 
     }
 }
+
+
