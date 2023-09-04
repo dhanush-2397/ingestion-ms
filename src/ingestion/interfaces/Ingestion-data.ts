@@ -169,5 +169,6 @@ export class RawDataPullBody{
 
 export interface RawDataResponse {
     code: number,
-    data:any
+    data?:any,
+    error?:any
 }

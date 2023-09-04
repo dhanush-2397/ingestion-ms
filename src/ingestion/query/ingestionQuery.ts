@@ -78,5 +78,10 @@ export const IngestionDatasetQuery = {
         const queryStr = `SELECT total_data_count, processed_data_count,error_data_count FROM
         ingestion."FileTracker" where pid = $1`;
         return {query:queryStr,values: [fileTrackerPid]};
+    },
+    async insertIntoEmission(program_name:string,presignedurl:string,file_status:string){
+        const queryStr =`INSERT into emission."vsk_tracker"(program_name,presignedurl,file_status)VALUES
+        ($1,$2,$3)`;
+        return {query:queryStr,values:[program_name,presignedurl,file_status]}
     }
 };
