@@ -40,6 +40,7 @@ import {DataEmissionService} from '../services/data-emission/data-emission.servi
 import {V4DataEmissionService} from "../services/v4-data-emission/v4-data-emission.service";
 import {JwtGuard} from '../../guards/jwt.guard';
 import * as jwt from 'jsonwebtoken';
+import { NvskApiService } from '../services/nvsk-api/nvsk-api.service';
 
 @ApiTags('ingestion')
 @Controller('')
@@ -48,7 +49,8 @@ export class IngestionController {
         private datasetService: DatasetService, private dimensionService: DimensionService
         , private eventService: EventService, private csvImportService: CsvImportService, private fileStatus: FileStatusService, private updateFileStatus: UpdateFileStatusService,
         private databaseService: DatabaseService, private dataEmissionService: DataEmissionService, private v4DataEmissionService: V4DataEmissionService,
-        private rawDataImportService:RawDataImportService ) {
+        private rawDataImportService:RawDataImportService,
+        private nvskService:NvskApiService) {
     }
 
     @Get('generatejwt')
@@ -236,5 +238,20 @@ export class IngestionController {
             console.error('ingestion.controller.getRawDataApi: ', e.message);
             throw new Error(e);
         }
+    }
+    @Get('/nvsk-data')
+    async fetchData(@Body()inputData: NvskApiService,@Res()response: Response){
+        try {
+            const result: any = await this.nvskService.getEmitterData();
+            if (result.code == 400) {
+                response.status(400).send({message: result.error});
+            } else {
+                response.status(200).send({message: result});
+            }
+        } catch (e) {
+            console.error('ingestion.controller.v4dataEmission: ', e.message);
+            throw new Error(e);
+        }
+
     }
 }

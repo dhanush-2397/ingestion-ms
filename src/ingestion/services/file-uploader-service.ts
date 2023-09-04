@@ -8,7 +8,8 @@ import { lookup } from "mime-types";
 import { Client } from "minio";
 import { objectstorage } from "oci-sdk";
 import * as common from "oci-common";
-
+import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 interface FileStructure {
   fileFullPath: string;
   fileName: string;
@@ -303,4 +304,24 @@ export class UploadService {
       );
     }
   }
+
+
+    public async  getSignedUrl(){
+        if(process.env.STORAGE_TYPE === 'aws'){
+            const s3Configuration = {
+                credentials: {
+                    accessKeyId:  process.env.AWS_ACCESS_KEY, secretAccessKey: process.env.AWS_SECRET_KEY
+                },
+                region: 'ap-south-1',
+            };
+            const s3 = new S3Client(s3Configuration);
+            const command = new GetObjectCommand({ Bucket: process.env.AWS_BUCKET, Key: 'emission/25-Aug-2023/pm-poshan_access-across-india.csv' });
+            const url = await getSignedUrl(s3, command, { expiresIn: 432000}); // expires in seconds
+            console.log(" ------------------------------------------------------ ");
+            console.log('AWS Presigned URL: ', url);
+            console.log(" ------------------------------------------------------ ");
+            return url           
+        }
+    }
+
 }
