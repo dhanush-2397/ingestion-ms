@@ -229,7 +229,7 @@ export class IngestionController {
     }
 
     @Post('/getRawData')
-    @UseGuards(JwtGuard)
+    // @UseGuards(JwtGuard)
     async getPresignedUrls(@Body() inputData: RawDataPullBody, @Res()response: Response){
         try {
 
@@ -240,7 +240,7 @@ export class IngestionController {
             throw new Error(e);
         }
     }
-    @Get('/nvsk-data')
+    @Get('/data-emitter')
     async fetchData(@Body()inputData: NvskApiService,@Res()response: Response){
         try {
             const result: any = await this.nvskService.getEmitterData();

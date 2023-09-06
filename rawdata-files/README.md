@@ -1,0 +1,1 @@
+This folder contains the VSK related data extracted from NVSK
