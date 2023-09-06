@@ -16,3 +16,16 @@ CREATE TABLE IF NOT EXISTS ingestion."FileTracker" (
   processed_data_count NUMERIC,
   error_data_count     NUMERIC
 );
+
+CREATE SCHEMA IF NOT EXISTS emission;
+
+CREATE TABLE IF NOT EXISTS ingestion."vsk_tracker" (
+  pid                  INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  created_at           TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at           TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  program_name         VARCHAR NOT NULL,
+  presignedurl         VARCHAR
+  token                VARCHAR,
+  file_status          VARCHAR
+
+);

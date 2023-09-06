@@ -1,3 +1,5 @@
+import { Result } from './../../interfaces/Ingestion-data';
+import { HttpCustomService } from './../HttpCustomService';
 import { DatabaseService } from './../../../database/database.service';
 import { GenericFunction } from './../generic-function';
 import { UploadService } from './../file-uploader-service';
@@ -8,19 +10,25 @@ const csv = require('csv-parser');
 const fs = require('fs');
 @Injectable()
 export class NvskApiService {
-   constructor(private fileService: UploadService, private service: GenericFunction, private databaseService: DatabaseService) {
+   constructor(private fileService: UploadService, private service: GenericFunction, private databaseService: DatabaseService, private httpService:HttpCustomService) {
 
    }
    /* NVSK side implementations */
    async getEmitterData() {
-
-      let urlData = [
-         {
-            program_name: 'pm_poshan',
-            urls: ["https://s3-cqube-edu-1.s3.ap-south-1.amazonaws.com/emission/25-Aug-2023/pm-poshan_access-across-india.csv?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=AKIA2YWRVRZFEVR7OGPL%2F20230825%2Fap-south-1%2Fs3%2Faws4_request&X-Amz-Date=20230825T082056Z&X-Amz-Expires=432000&X-Amz-Signature=929590a8c6523b59dda708577bfbcdd20e02264f2edac13abcb2613525d7f794&X-Amz-SignedHeaders=host&x-id=GetObject"]
-         }
-      ];
-
+      let urlData;
+      let names = process.env.PROGRAM_NAMES.split(',')
+      let body:any ={
+         "program_names":names
+      }
+      const result = await this.httpService.post(process.env.NVSK_URL + '/getRawData',body)
+      if(result?.data['code'] === 200){
+         console.log("the result data is:",result?.data['data']);
+         urlData = result?.data['data']
+      }else{
+         console.log(JSON.stringify(result.data));
+         return {code:400,error:result?.data['error']?result?.data['error']:"Error occured during the NVSK data emission"}
+      }
+      console.log("the url data is:", urlData);
       this.writeRawDataFromUrl(urlData)
       return { code: 200, message: "VSK Writing to the file in process" }
    }
@@ -33,18 +41,18 @@ export class NvskApiService {
                for (let url of data.urls) {
                   const parsedUrl = new URL(url);
                   const fileName = `./rawdata-files/` + parsedUrl.pathname.split('/').pop();
+                  console.log("The filename is:",fileName, url);
                   const stream = (await axios.get(url, { responseType: 'stream' })).data
                   const filteredCsvStream = fs.createWriteStream(`${fileName}`);
                   let isFirstRow = true;
                   stream
                      .pipe(csv({}))
                      .on('data', (row) => {
-                        // Filter data based on state_id
                         if (isFirstRow) {
                            filteredCsvStream.write(Object.keys(row).join(',') + '\n');
                            isFirstRow = false;
                         }
-                        if (row['state_code'].slice(1, -1) === '12') {
+                        if (row['state_code'].slice(1, -1) === process.env.STATE_CODE) {
                            filteredCsvStream.write(Object.values(row).join(',') + '\n');
                         }
                      })
@@ -65,13 +73,14 @@ export class NvskApiService {
                            this.service.deleteLocalFile(fileName)
                         }
                         const queryStr = await IngestionDatasetQuery.insertIntoEmission(pgname, url, 'Uploaded')
-                        console.log("Query string is:", queryStr);
                         const result = await this.databaseService.executeQuery(queryStr.query, queryStr.values)
-                        this.service.deleteLocalFile(fileName)
+                        // this.service.deleteLocalFile(fileName)
                         console.log(`Filtered data saved to ${fileName}`);
                         return { code: 200, message: "successfully written to the file" }
                      })
-                     .on('error', (error) => {
+                     .on('error', async (error) => {
+                        const queryStr = await IngestionDatasetQuery.insertIntoEmission(pgname, url, error)
+                        const result = await this.databaseService.executeQuery(queryStr.query, queryStr.values)
                         this.service.deleteLocalFile(fileName);
                         console.error('Error processing CSV:', error);
                      });
