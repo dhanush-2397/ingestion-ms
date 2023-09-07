@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS ingestion."FileTracker" (
 
 CREATE SCHEMA IF NOT EXISTS emission;
 
-CREATE TABLE IF NOT EXISTS ingestion."vsk_tracker" (
+CREATE TABLE IF NOT EXISTS emission."vsk_tracker" (
   pid                  INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   created_at           TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at           TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

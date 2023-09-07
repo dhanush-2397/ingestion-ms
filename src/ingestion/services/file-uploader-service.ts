@@ -121,7 +121,7 @@ export class UploadService {
       accessKeyId: process.env.AWS_ACCESS_KEY,
       secretAccessKey: process.env.AWS_SECRET_KEY,
     });
-    return new Promise((resolve, reject) => {
+    return new Promise( (resolve, reject) => {
       // file name
       const params = {
         Bucket: bucket,
@@ -195,7 +195,7 @@ export class UploadService {
         // file name
         const params = {
           Bucket: process.env.AWS_BUCKET,
-          Prefix: folderName,
+          Prefix: folderName+'/',
           Delimiter: '/'
         };
 
@@ -228,8 +228,10 @@ export class UploadService {
 }
 
   public async getFolderObjects(folderName){
+    
     if (process.env.STORAGE_TYPE == 'aws') {
-      await this.getObjectsFromS3(folderName);
+     const result =  await this.getObjectsFromS3(folderName);
+     return result;
     } else if (process.env.STORAGE_TYPE == 'local') {
      const result =  await  this.getObjectsFromMinio(folderName);
      return result;
@@ -251,7 +253,7 @@ export class UploadService {
         Prefix: folderName,
       };
 
-      s3.listObjects(params, async (err, data) => {
+       s3.listObjects(params, async (err, data) => {
         if (err) {
           reject(err);
         } else {
@@ -265,7 +267,7 @@ export class UploadService {
   public async getObjectsFromMinio(folderName) {
     return new Promise(async(resolve,reject)=>{
       let minioFolderNames = []
-       await this.minioClient.listObjects(process.env.MINIO_BUCKET, folderName, true)
+       await this.minioClient.listObjectsV2(process.env.MINIO_BUCKET, folderName, true)
         .on('data', (obj) => {         
           minioFolderNames.push(obj.name?.split('/')[2]);
         })
