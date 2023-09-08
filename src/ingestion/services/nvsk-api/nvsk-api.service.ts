@@ -2,14 +2,16 @@ import { HttpCustomService } from './../HttpCustomService';
 import { DatabaseService } from './../../../database/database.service';
 import { GenericFunction } from './../generic-function';
 import { UploadService } from './../file-uploader-service';
-import { Injectable } from '@nestjs/common';
+import { Body, Injectable } from '@nestjs/common';
 import axios from 'axios';
 import { IngestionDatasetQuery } from 'src/ingestion/query/ingestionQuery';
+import { DateService } from '../dateService';
 const csv = require('csv-parser');
 const fs = require('fs');
 @Injectable()
 export class NvskApiService {
-   constructor(private fileService: UploadService, private service: GenericFunction, private databaseService: DatabaseService, private httpService: HttpCustomService) {
+   constructor(private fileService: UploadService, private service: GenericFunction, private databaseService: DatabaseService, private httpService: HttpCustomService,
+      private dateService: DateService) {
 
    }
    /* NVSK side implementations */
@@ -19,15 +21,20 @@ export class NvskApiService {
       let body: any = {
          "program_names": names
       }
-      const result = await this.httpService.post(process.env.NVSK_URL + '/getRawData', body)
-      if (result?.data['code'] === 200) {
-         urlData = result?.data['data']
-      } else {
-         console.log("Error ocurred::",JSON.stringify(result.data));
-         return { code: 400, error: result?.data['error'] ? result?.data['error'] : "Error occured during the NVSK data emission" }
+      try {
+         const result = await this.httpService.post(process.env.NVSK_URL + '/getRawData', body)
+         if (result?.data['code'] === 200) {
+            urlData = result?.data['data']
+         } else {
+            console.log("Error ocurred::", JSON.stringify(result.data));
+            return { code: 400, error: result?.data['error'] ? result?.data['error'] : "Error occured during the NVSK data emission" }
+         }
+         this.writeRawDataFromUrl(urlData)
+         return { code: 200, message: "VSK Writing to the file in process" }
+      } catch (error) {
+         return { code: 400, errorMsg: error }
       }
-      this.writeRawDataFromUrl(urlData)
-      return { code: 200, message: "VSK Writing to the file in process" }
+
    }
    async writeRawDataFromUrl(urlData: Array<{ program_name: string, urls: string[] }>) {
       try {
@@ -66,11 +73,10 @@ export class NvskApiService {
                                  await this.fileService.uploadFiles('aws', `${process.env.AWS_BUCKET}`, fileName, `emission/${folderName}/`);
                               }
                               this.service.deleteLocalFile(fileName)
-                              console.log("The file is uploaded")
+
                               const queryStr = await IngestionDatasetQuery.insertIntoEmission(pgname, url, 'Uploaded')
                               const result = await this.databaseService.executeQuery(queryStr.query, queryStr.values)
                               console.log(`Filtered data saved to ${fileName}`);
-                              return { code: 200, message: "successfully written to the file" }
                            } catch (error) {
                               this.service.deleteLocalFile(fileName)
                            }
@@ -84,6 +90,26 @@ export class NvskApiService {
                      });
                }
             }
+            try {
+               let dateResult = await this.dateService.getCurrentTimeForCronSchedule()
+               let cronExpression = `0 ${dateResult[1]} ${dateResult[0]} * * ?`
+               console.log("Cron expression is:", cronExpression);
+               let url = `${process.env.SPEC_URL}` + '/schedule'
+               let body = {
+                  "processor_group_name": "Run_adapters",
+                  "scheduled_at": `"${cronExpression}"`
+               }
+               let scheduleResult = await this.httpService.post(url, body)
+               if (scheduleResult?.data['code'] === 200) {
+                  return { code: 200, message: "successfully scheduled the adapters" }
+               } else {
+                  return { code: 400, error: "Adapter schedule failed" }
+               }
+            } catch (err) {
+               console.log("error for adapters is:", err);
+            }
+
+
          }
       } catch (error) {
          console.log("error is:", error);
