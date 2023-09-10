@@ -37,7 +37,7 @@ export class RawDataImportService {
               program_name: program_name,
               urls: [],
             };
-            const key = `emission/`;
+            const key = `emission`;
             await this.uploadService
               .getFolderNames(key)
               .then(async (objects: any) => {
@@ -62,12 +62,11 @@ export class RawDataImportService {
                   return monthNames[monthIndex];
                 }
                 await this.uploadService
-                  .getFolderObjects(`${key}${latestDate}`)
+                  .getFolderObjects(`${key}/${latestDate}`)
                   .then(async (objectNames: any) => {
                     objectNames = objectNames.filter((objectName) =>
                     objectName?.toLowerCase().includes(program_name.toLowerCase())
                     );
-                    console.log("Object Names are:", objectNames);
                     const promises = objectNames.map(async (objectKey) => {
                       const url = await this.uploadService.fileDownloaderUrl(
                         objectKey
