@@ -102,13 +102,51 @@ export class GenericFunction {
                     console.error('Error writing CSV file:', err);
                     reject(err)
                 });
-        } catch (e) {
-            console.error('writeToCSVFile: ', e.message);
-            throw new Error(e);
-        }
-    });
+            } catch (e) {
+                console.error('writeToCSVFile: ', e.message);
+                throw new Error(e);
+            }
+        });
 
-} 
+    } 
+
+    // for storing telemetry data
+    async writeTelemetryToCSV(fileName, inputArray){
+        return new Promise( async (resolve, reject) => {
+            try {
+                do {
+                    // check is the lock is released
+                    if (this.currentlyLockedFiles[fileName]) {
+                        await this.processSleep(10);
+                    } else {
+                        // console.log('Lock released ');
+                        break;
+                    }
+                } while (true);
+                // get the lock on the file
+                this.currentlyLockedFiles[fileName] = true;
+                // Check if the CSV file already exists to determine whether to write headers
+                const writeHeaders = !fs.existsSync(fileName);
+                // Create a writable stream to the CSV file
+                const stream = fs.createWriteStream(fileName,{flags:'a'});
+                await csv.write(inputArray, { headers: writeHeaders,includeEndRowDelimiter: true})
+                        .pipe(stream)
+                        .on('finish', () => {
+                            console.log('CSV file has been written successfully');
+                            // delete the lock after writing
+                            delete this.currentlyLockedFiles[fileName];
+                            resolve('done')
+                        })
+                        .on('error', (err) => {
+                            console.error('Error writing CSV file:', err);
+                            reject(err)
+                        });
+            }
+            catch(e){
+                reject(e)
+            }    
+        })
+    }
 
     ajvValidator(schema, inputData) {
         const isValid = ajv.validate(schema, inputData);

@@ -10,12 +10,14 @@ export class EventService {
     }
 
     async createEvent(inputData) {
-        try {
+        try {            
             if (inputData.event_name) {
                 let eventName = inputData.event_name;
                 let isEnd = inputData?.isEnd;
-                let queryStr = await IngestionDatasetQuery.getEvents(eventName);
+                let isTelemetryWritingEnd = inputData?.isTelemetryWritingEnd;
+                let queryStr = await IngestionDatasetQuery.getEvents(eventName);                
                 const queryResult = await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
+                
                 if (queryResult?.length === 1) {
                     let errorCounter = 0, validCounter = 0;
                     let validArray = [], invalidArray = [];
@@ -65,9 +67,31 @@ export class EventService {
 
 
                         }
+                        
                         if (validArray.length > 0) {
-                            file = `./input-files/` + fileName + '.csv';
-                            await this.service.writeToCSVFile(file, validArray);
+                            if(inputData.event_name == 'telemetry'){
+                                file = `./emission-files/` + fileName + '.csv';
+                                await this.service.writeTelemetryToCSV(file, validArray);
+                            } else {
+                                file = `./input-files/` + fileName + '.csv';
+                                await this.service.writeToCSVFile(file, validArray);
+                            }
+                            
+                            if(isTelemetryWritingEnd && inputData.event_name == 'telemetry'){
+                                let filePath = `./emission-files/` + fileName + ".csv";
+                                let folderName = await this.service.getDate();
+                                if (process.env.STORAGE_TYPE === 'local') {
+                                    await this.uploadService.uploadFiles('local', `${process.env.MINIO_BUCKET}`, filePath, `emission/${folderName}/`);
+                                } else if (process.env.STORAGE_TYPE === 'azure') {
+                                    await this.uploadService.uploadFiles('azure', `${process.env.AZURE_CONTAINER}`, filePath, `emission/${folderName}/`);
+                                } else if (process.env.STORAGE_TYPE === 'oracle') {
+                                    await this.uploadService.uploadFiles('oracle', `${process.env.ORACLE_BUCKET}`, filePath, `emission/${folderName}/`);
+                                } else {
+                                    await this.uploadService.uploadFiles('aws', `${process.env.AWS_BUCKET}`, filePath, `emission/${folderName}/`);
+                                }                                
+                                // delete the file
+                                await this.service.deleteLocalFile(filePath)
+                            }
                             if (isEnd) {
                                 if (process.env.STORAGE_TYPE === 'local') {
                                     await this.uploadService.uploadFiles('local', `${process.env.MINIO_BUCKET}`, file, `process_input/${eventName}/${folderName}/`);
