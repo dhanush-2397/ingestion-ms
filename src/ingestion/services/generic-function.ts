@@ -7,7 +7,7 @@ import * as fs from 'fs';
 const path = require('path');
 const csv = require('fast-csv');
 
-const ajv = new Ajv2019();
+const ajv = new Ajv2019({allErrors: true});
 addFormats(ajv);
 
 const ObjectsToCsv = require('objects-to-csv');

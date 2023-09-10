@@ -16,11 +16,12 @@ import {UploadService} from "./services/file-uploader-service";
 import { RawDataImportService } from './services/rawDataImport/rawDataImport.service';
 import { NvskApiService } from './services/nvsk-api/nvsk-api.service';
 import { DateService } from './services/dateService';
+import { GrammarService } from './services/grammar/grammar.service';
 
 @Module({
     controllers: [IngestionController],
     providers: [DatasetService, DimensionService, EventService, GenericFunction, HttpCustomService, CsvImportService, FileStatusService,
-        UpdateFileStatusService, DataEmissionService, V4DataEmissionService, UploadService,RawDataImportService,NvskApiService,DateService],
+        UpdateFileStatusService, DataEmissionService, V4DataEmissionService, UploadService,RawDataImportService,NvskApiService,DateService,GrammarService],
     imports: [DatabaseModule, HttpModule]
 })
 export class IngestionModule {
