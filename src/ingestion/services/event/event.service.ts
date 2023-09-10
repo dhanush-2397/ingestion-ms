@@ -3,10 +3,14 @@ import { IngestionDatasetQuery } from '../../query/ingestionQuery';
 import { DatabaseService } from '../../../database/database.service';
 import { GenericFunction } from '../generic-function';
 import { UploadService } from '../file-uploader-service';
+import { GrammarService } from '../grammar/grammar.service';
+import { Request } from 'express';
+const fs = require('fs');
+const {parse} = require('@fast-csv/parse');
 
 @Injectable()
 export class EventService {
-    constructor(private DatabaseService: DatabaseService, private service: GenericFunction, private uploadService: UploadService) {
+    constructor(private DatabaseService: DatabaseService, private service: GenericFunction, private uploadService: UploadService, private grammarService: GrammarService) {
     }
 
     async createEvent(inputData) {
@@ -146,4 +150,51 @@ export class EventService {
             throw new Error(e);
         }
     }
+
+    async validateEvent(inputData, file: Express.Multer.File, request?: Request) {
+        return new Promise(async (resolve, reject) => {
+            const { id } = inputData;
+            const fileCompletePath = file.path;
+            const fileSize = file.size;
+            const uploadedFileName = file.originalname;
+            const eventGrammar = await this.grammarService.getEventSchemaByID(+id);
+
+            if (eventGrammar?.length > 0) {
+                const schema = eventGrammar[0].schema;
+                const rows = [];
+                const csvReadStream = fs.createReadStream(fileCompletePath)
+                    .pipe(parse({headers: true}))
+                    .on('data', async (csvrow) => {
+                        this.service.formatDataToCSVBySchema(csvrow, schema, false);
+                        const isValidSchema: any = await this.service.ajvValidator(schema, csvrow);
+                        if (isValidSchema.errors) {
+                            csvrow['error_description'] = isValidSchema.errors;
+                        }
+
+                        rows.push(csvrow);
+                    })
+                    .on('error', async (err) => {
+                        // delete the file
+                        try {
+                            await fs.unlinkSync(fileCompletePath);
+                            reject(`Error -> file stream error ${err}`);
+                        } catch (e) {
+                            console.error('csvImport.service.file delete error: ', e);
+                            reject(`csvImport.service.file delete error: ${e}`);
+                        }
+                    })
+                    .on('end', async () => {
+                        try {
+                            await fs.unlinkSync(fileCompletePath);
+                            resolve(rows);
+                        } catch (e) {
+                            console.error('csvImport.service.file delete error: ', e);
+                            reject('csvImport.service.file delete error: ' + e);
+                        }
+                    });
+            } else {
+                reject('No grammar found for the given id');
+            }
+        });
+    } 
 }

@@ -21,7 +21,7 @@ import {
     UploadedFile,
     UseInterceptors,
     Put,
-    UseGuards, Req
+    UseGuards, Req, Param
 } from '@nestjs/common';
 import {DatasetService} from '../services/dataset/dataset.service';
 import {DimensionService} from '../services/dimension/dimension.service';
@@ -41,6 +41,29 @@ import {V4DataEmissionService} from "../services/v4-data-emission/v4-data-emissi
 import {JwtGuard} from '../../guards/jwt.guard';
 import * as jwt from 'jsonwebtoken';
 import { NvskApiService } from '../services/nvsk-api/nvsk-api.service';
+import { GrammarService } from '../services/grammar/grammar.service';
+import { GenericFunction } from '../services/generic-function';
+
+let validateBodySchema = {
+    "type": "object",
+    "properties": {
+        "type": {
+            "type": "string",
+            "enum": [
+                "event",
+                "dimension"
+            ]
+        },
+        "id": {
+            "type": "string",
+            "shouldnotnull": true
+        }
+    },
+    "required": [
+        "type",
+        "id"
+    ]
+};
 
 @ApiTags('ingestion')
 @Controller('')
@@ -50,7 +73,9 @@ export class IngestionController {
         , private eventService: EventService, private csvImportService: CsvImportService, private fileStatus: FileStatusService, private updateFileStatus: UpdateFileStatusService,
         private databaseService: DatabaseService, private dataEmissionService: DataEmissionService, private v4DataEmissionService: V4DataEmissionService,
         private rawDataImportService:RawDataImportService,
-        private nvskService:NvskApiService) {
+        private nvskService:NvskApiService,
+        private grammarService: GrammarService,
+        private service: GenericFunction) {
     }
 
     @Get('generatejwt')
@@ -256,6 +281,61 @@ export class IngestionController {
         }
 
     }
+
+    @Get('/grammar/:type')
+    async fetchGrammar(@Param() params: any, @Res()response: Response){
+        try {
+            const { type } = params;
+            let result;
+            if (type === "event") {
+                result = await this.grammarService.getEventSchemas();
+            } else if (type === "dimension") {
+                result = await this.grammarService.getDimensionSchemas();
+            } else {
+                throw new Error(`Invalid type found ${type}`);
+            }
+
+            response.status(200).send(result);
+        } catch (e) {
+            console.error('ingestion.controller.nvskAPI service: ', e.message);
+            throw new Error(e);
+        }
+    }
+
+    @UseInterceptors(FileInterceptor('file', {
+        storage: diskStorage({
+            destination: './files',
+        })
+    }))
+
+    @Post('/validate')
+    @ApiConsumes('multipart/form-data')
+    async validateEventOrDimension(@Body() body: any, @Res()response: Response, @UploadedFile(
+        new ParseFilePipe({
+            validators: [
+                new FileIsDefinedValidator(),
+                new FileTypeValidator({fileType: 'text/csv'}),
+            ],
+        }),
+    ) file: Express.Multer.File, @Req() request: Request) {
+        try {
+            let isValidSchema: any = await this.service.ajvValidator(validateBodySchema, body);
+            if (isValidSchema && isValidSchema.errors) {
+                response.status(400).send({error: isValidSchema.errors});
+            } else {
+                let result: any;
+                if (body.type === "dimension") {
+                    result = await this.dimensionService.validateDimension(body, file, request);
+                } else if (body.type === "event") {
+                    result = await this.eventService.validateEvent(body, file, request);
+                }
+
+                response.status(200).send({data: result});
+            }
+        } catch (e) {
+            console.error('ingestion.controller.csv: ', e);
+            response.status(400).send({message: e.error || e.message || e});
+            // throw new Error(e);
+        }
+    }
 }
-
-
