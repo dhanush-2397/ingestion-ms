@@ -37,15 +37,13 @@ export class RawDataImportService {
               program_name: program_name,
               urls: [],
             };
-            const key = `emission/`;
-
+            const key = `emission`;
             await this.uploadService
               .getFolderNames(key)
               .then(async (objects: any) => {
                 const parsedDates = objects.map((dateStr) => new Date(dateStr));
                 var latestDate: any = new Date(Math.max(...parsedDates));
-                latestDate = `${latestDate.getDate()}-${formatMonth(latestDate.getMonth())}-${latestDate.getFullYear()}`;
-                console.log("The latest date is:", latestDate);
+                latestDate = `${latestDate.getDate() < 10 ? '0'+latestDate.getDate() : latestDate.getDate()}-${formatMonth(latestDate.getMonth())}-${latestDate.getFullYear()}`;
                 function formatMonth(monthIndex) {
                   const monthNames = [
                     "Jan",
@@ -64,13 +62,11 @@ export class RawDataImportService {
                   return monthNames[monthIndex];
                 }
                 await this.uploadService
-                  // .getFolderObjects(`${key}${latestDate}`)
-                  .getFolderObjects(`${key}01-Sep-2023`)
+                  .getFolderObjects(`${key}/${latestDate}`)
                   .then(async (objectNames: any) => {
                     objectNames = objectNames.filter((objectName) =>
-                      objectName.includes(program_name)
+                    objectName?.toLowerCase().includes(program_name.toLowerCase())
                     );
-                    console.log("The object names are:", objectNames);
                     const promises = objectNames.map(async (objectKey) => {
                       const url = await this.uploadService.fileDownloaderUrl(
                         objectKey

@@ -162,9 +162,9 @@ export class EmissionBody {
 
 export class RawDataPullBody{
     @ApiProperty()
-    program_names: string[];
+    program_names?: string[];
     @ApiProperty()
-    token:string;
+    token?:string;
 }
 
 export interface RawDataResponse {

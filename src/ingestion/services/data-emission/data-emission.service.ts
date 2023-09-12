@@ -26,7 +26,7 @@ export class DataEmissionService {
 
             //Unzip the file
             uploadedFileName = await this.unzip(File);
-
+            console.log("The name is:", uploadedFileName);
             let filePath;
             if (queryResult?.length === 1) {
                 let fileTrackerPid = queryResult[0].pid;

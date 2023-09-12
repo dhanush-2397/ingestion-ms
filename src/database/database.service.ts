@@ -12,6 +12,10 @@ export class DatabaseService {
         this.logger.debug(`Executing query: ${queryText} (${values})`);
         return this.pool.query(queryText, values).then((result: QueryResult) => {
             return result.rows;
-        });
+        },
+        (error)=>{
+            return error
+        }
+        );
     }
 }

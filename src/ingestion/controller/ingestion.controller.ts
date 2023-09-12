@@ -21,7 +21,7 @@ import {
     UploadedFile,
     UseInterceptors,
     Put,
-    UseGuards, Req
+    UseGuards, Req, Param
 } from '@nestjs/common';
 import {DatasetService} from '../services/dataset/dataset.service';
 import {DimensionService} from '../services/dimension/dimension.service';
@@ -37,10 +37,33 @@ import {UpdateFileStatusService} from '../services/update-file-status/update-fil
 import {ApiConsumes, ApiTags} from '@nestjs/swagger';
 import {DatabaseService} from '../../database/database.service';
 import {DataEmissionService} from '../services/data-emission/data-emission.service';
-import {V4DataEmissionService} from "../services/v4-data-emission/v4-data-emission.service";
 import {JwtGuard} from '../../guards/jwt.guard';
 import * as jwt from 'jsonwebtoken';
 import { NvskApiService } from '../services/nvsk-api/nvsk-api.service';
+import { UploadDimensionFileService } from '../services/upload-dimension-file/upload-dimension-file.service';
+import { GrammarService } from '../services/grammar/grammar.service';
+import { GenericFunction } from '../services/generic-function';
+
+let validateBodySchema = {
+    "type": "object",
+    "properties": {
+        "type": {
+            "type": "string",
+            "enum": [
+                "event",
+                "dimension"
+            ]
+        },
+        "id": {
+            "type": "string",
+            "shouldnotnull": true
+        }
+    },
+    "required": [
+        "type",
+        "id"
+    ]
+};
 
 @ApiTags('ingestion')
 @Controller('')
@@ -48,9 +71,12 @@ export class IngestionController {
     constructor(
         private datasetService: DatasetService, private dimensionService: DimensionService
         , private eventService: EventService, private csvImportService: CsvImportService, private fileStatus: FileStatusService, private updateFileStatus: UpdateFileStatusService,
-        private databaseService: DatabaseService, private dataEmissionService: DataEmissionService, private v4DataEmissionService: V4DataEmissionService,
+        private databaseService: DatabaseService, private dataEmissionService: DataEmissionService,
         private rawDataImportService:RawDataImportService,
-        private nvskService:NvskApiService) {
+        private nvskService:NvskApiService,
+        private grammarService: GrammarService,
+        private service: GenericFunction,
+        private uploadDimension:UploadDimensionFileService) {
     }
 
     @Get('generatejwt')
@@ -212,18 +238,17 @@ export class IngestionController {
     }
 
 
-    @Get('/v4-data-emission')
-    @UseGuards(JwtGuard)
+    @Get('/upload-dimension')
     async dataEmission(@Res()response: Response) {
         try {
-            const result: any = await this.v4DataEmissionService.uploadFiles();
+            const result: any = await this.uploadDimension.uploadFiles();
             if (result.code == 400) {
                 response.status(400).send({message: result.error});
             } else {
                 response.status(200).send({message: result.message});
             }
         } catch (e) {
-            console.error('ingestion.controller.v4dataEmission: ', e.message);
+            console.error('ingestion.controller.uploadDimensionFiles: ', e.message);
             throw new Error(e);
         }
     }
@@ -240,10 +265,11 @@ export class IngestionController {
             throw new Error(e);
         }
     }
-    @Get('/nvsk-data')
-    async fetchData(@Body()inputData: NvskApiService,@Res()response: Response){
+    @Post('/data-emitter')
+    @UseGuards(JwtGuard)
+    async fetchData(@Body()inputData:RawDataPullBody ,@Res()response: Response,@Req() request: Request){
         try {
-            const result: any = await this.nvskService.getEmitterData();
+            const result: any = await this.nvskService.getEmitterData(inputData?.program_names, request);
             console.log("result is", result);
             if (result?.code == 400) {
                 response.status(400).send({message: result.error});
@@ -256,6 +282,61 @@ export class IngestionController {
         }
 
     }
+
+    @Get('/grammar/:type')
+    async fetchGrammar(@Param() params: any, @Res()response: Response){
+        try {
+            const { type } = params;
+            let result;
+            if (type === "event") {
+                result = await this.grammarService.getEventSchemas();
+            } else if (type === "dimension") {
+                result = await this.grammarService.getDimensionSchemas();
+            } else {
+                throw new Error(`Invalid type found ${type}`);
+            }
+
+            response.status(200).send(result);
+        } catch (e) {
+            console.error('ingestion.controller.nvskAPI service: ', e.message);
+            throw new Error(e);
+        }
+    }
+
+    @UseInterceptors(FileInterceptor('file', {
+        storage: diskStorage({
+            destination: './files',
+        })
+    }))
+
+    @Post('/validate')
+    @ApiConsumes('multipart/form-data')
+    async validateEventOrDimension(@Body() body: any, @Res()response: Response, @UploadedFile(
+        new ParseFilePipe({
+            validators: [
+                new FileIsDefinedValidator(),
+                new FileTypeValidator({fileType: 'text/csv'}),
+            ],
+        }),
+    ) file: Express.Multer.File, @Req() request: Request) {
+        try {
+            let isValidSchema: any = await this.service.ajvValidator(validateBodySchema, body);
+            if (isValidSchema && isValidSchema.errors) {
+                response.status(400).send({error: isValidSchema.errors});
+            } else {
+                let result: any;
+                if (body.type === "dimension") {
+                    result = await this.dimensionService.validateDimension(body, file, request);
+                } else if (body.type === "event") {
+                    result = await this.eventService.validateEvent(body, file, request);
+                }
+
+                response.status(200).send({data: result});
+            }
+        } catch (e) {
+            console.error('ingestion.controller.csv: ', e);
+            response.status(400).send({message: e.error || e.message || e});
+            // throw new Error(e);
+        }
+    }
 }
-
-
