@@ -16,11 +16,12 @@ import { RawDataImportService } from './services/rawDataImport/rawDataImport.ser
 import { NvskApiService } from './services/nvsk-api/nvsk-api.service';
 import { DateService } from './services/dateService';
 import { UploadDimensionFileService } from './services/upload-dimension-file/upload-dimension-file.service';
+import { GrammarService } from './services/grammar/grammar.service';
 
 @Module({
     controllers: [IngestionController],
     providers: [DatasetService, DimensionService, EventService, GenericFunction, HttpCustomService, CsvImportService, FileStatusService,
-        UpdateFileStatusService, DataEmissionService, UploadService,RawDataImportService,NvskApiService,DateService,UploadDimensionFileService],
+        UpdateFileStatusService, DataEmissionService, UploadDimensionFileService, UploadService,RawDataImportService,NvskApiService,DateService,GrammarService],
     imports: [DatabaseModule, HttpModule]
 })
 export class IngestionModule {
