@@ -8,7 +8,7 @@ export class UploadDimensionFileService {
     constructor(private httpService:HttpCustomService){}
 
     async  uploadFiles(){
-        let folderPath = './dimension-files'
+        let folderPath = './dimension_files'
         try{
             let result = await this.httpService.get(process.env.URL + '/generatejwt')
             let token: any = result?.data;
