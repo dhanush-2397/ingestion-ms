@@ -66,7 +66,7 @@ export class NvskApiService {
                            filteredCsvStream.write(Object.keys(row).join(',') + '\n');
                            isFirstRow = false;
                         }
-                        if (row['state_code'].slice(1, -1) === process.env.STATE_CODE) {
+                        if (row['state_code'].slice(1, -1) === process.env.STATE_ID) {
                            filteredCsvStream.write(Object.values(row).join(',') + '\n');
                         }
                      })
@@ -105,13 +105,13 @@ export class NvskApiService {
                }
             }
             try {
-               let dateResult = await this.dateService.getCurrentTimeForCronSchedule()
-               let cronExpression = `0 ${dateResult[1]} ${dateResult[0]} * * ?`
-               console.log("Cron expression is:", cronExpression);
+               // let dateResult = await this.dateService.getCurrentTimeForCronSchedule()
+               // let cronExpression = `0 ${dateResult[1]} ${dateResult[0]} * * ?`
+               // console.log("Cron expression is:", cronExpression);
                let url = `${process.env.SPEC_URL}` + '/schedule'
                let scheduleBody = {
                   "processor_group_name": "Run_adapters",
-                  "scheduled_at": `${cronExpression}`
+                  "scheduled_at": "* 0/2 * * * ?"
                }
                console.log("The schedule body is:",scheduleBody)
                let scheduleResult = await this.httpService.post(url, scheduleBody)
