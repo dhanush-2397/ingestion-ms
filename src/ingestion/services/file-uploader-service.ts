@@ -145,13 +145,14 @@ export class UploadService {
         signatureVersion: "v4",
         accessKeyId: process.env.AWS_ACCESS_KEY,
         secretAccessKey: process.env.AWS_SECRET_KEY,
-        region: 'ap-south-1'
+        region: process.env.AWS_REGION
       });
       return new Promise((resolve, reject) => {
         // file name
         const params = {
           Bucket: process.env.AWS_BUCKET,
           Key: fileName,
+          Expires: 3600
         };
         s3.getSignedUrl('getObject', params, (err, url) => {
           if (err) {
@@ -171,7 +172,7 @@ export class UploadService {
         secretKey: process.env.MINIO_SECRET_KEY,
       });
       return new Promise((resolve, reject) => {
-        minioClient.presignedUrl('GET', process.env.MINIO_BUCKET, fileName, 24 * 60 * 60, function (err, presignedUrl) {
+        minioClient.presignedUrl('GET', process.env.MINIO_BUCKET, fileName, 3600, function (err, presignedUrl) {
           if (err) {
             console.log(err)
           } else {

@@ -24,9 +24,13 @@ export class DateService{
       if (this.isTimeGreaterThan12PM(currentTime)) {
     // Convert to IST (add 5 hours and 30 minutes for the UTC+5:30 offset)
     const [hours, minutes] = currentTime.split(':');
+    // const hour = parseInt(hours, 10) + 5;
+    // const minute = parseInt(minutes, 10) + 30;
+
     console.log("Hours is:", hours);
     console.log("Minutes is:",minutes);
-    return [hours,minutes]
+    let min = parseInt(minutes) + 2
+    return [hours,min]
     } else {
     return currentTime
   }

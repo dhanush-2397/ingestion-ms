@@ -79,9 +79,9 @@ export const IngestionDatasetQuery = {
         ingestion."FileTracker" where pid = $1`;
         return {query:queryStr,values: [fileTrackerPid]};
     },
-    async insertIntoEmission(program_name:string,presignedurl:string,file_status:string){
-        const queryStr =`INSERT into emission."vsk_tracker"(program_name,presignedurl,file_status)VALUES
-        ($1,$2,$3)`;
-        return {query:queryStr,values:[program_name,presignedurl,file_status]}
+    async insertIntoEmission(program_name:string,presignedurl:string,jwt_token:string,file_status:string){
+        const queryStr =`INSERT into emission."vsk_tracker"(program_name,presignedurl,jwt_token,file_status)VALUES
+        ($1,$2,$3,$4)`;
+        return {query:queryStr,values:[program_name,presignedurl,jwt_token,file_status]}
     }
 };

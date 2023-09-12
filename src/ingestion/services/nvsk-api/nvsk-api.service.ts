@@ -6,6 +6,7 @@ import { Body, Injectable } from '@nestjs/common';
 import axios from 'axios';
 import { IngestionDatasetQuery } from 'src/ingestion/query/ingestionQuery';
 import { DateService } from '../dateService';
+import { Request } from 'express';
 const csv = require('csv-parser');
 const fs = require('fs');
 @Injectable()
@@ -15,28 +16,36 @@ export class NvskApiService {
 
    }
    /* NVSK side implementations */
-   async getEmitterData() {
+   async getEmitterData(inputData: string[],request: Request) {
       let urlData;
-      let names = process.env.PROGRAM_NAMES.split(',')
+      let names;
+      if(!inputData || inputData.length == 0){
+       names = process.env.PROGRAM_NAMES?.split(',')
+      }else{
+         names = inputData;
+      }
       let body: any = {
          "program_names": names
       }
       try {
-         const result = await this.httpService.post(process.env.NVSK_URL + '/getRawData', body)
+         const headers = {
+            Authorization: request.headers.authorization
+        }; 
+         const result = await this.httpService.post(process.env.NVSK_URL + '/getRawData', body,{headers: headers})
          if (result?.data['code'] === 200) {
             urlData = result?.data['data']
          } else {
             console.log("Error ocurred::", JSON.stringify(result.data));
             return { code: 400, error: result?.data['error'] ? result?.data['error'] : "Error occured during the NVSK data emission" }
          }
-         this.writeRawDataFromUrl(urlData)
+         this.writeRawDataFromUrl(urlData,headers.Authorization)
          return { code: 200, message: "VSK Writing to the file in process" }
       } catch (error) {
          return { code: 400, errorMsg: error }
       }
 
    }
-   async writeRawDataFromUrl(urlData: Array<{ program_name: string, urls: string[] }>) {
+   async writeRawDataFromUrl(urlData: Array<{ program_name: string, urls: string[] }>,jwtToken:string) {
       try {
          if (urlData?.length > 0) {
             for (let data of urlData) {
@@ -44,6 +53,9 @@ export class NvskApiService {
                for (let url of data.urls) {
                   const parsedUrl = new URL(url);
                   const fileName = `./rawdata-files/` + parsedUrl.pathname.split('/').pop();
+                  if(fs.existsSync(fileName)){
+                     this.service.deleteLocalFile(fileName);
+                  }
                   const stream = (await axios.get(url, { responseType: 'stream' })).data
                   const filteredCsvStream = fs.createWriteStream(`${fileName}`);
                   let isFirstRow = true;
@@ -74,8 +86,9 @@ export class NvskApiService {
                               }
                               this.service.deleteLocalFile(fileName)
 
-                              const queryStr = await IngestionDatasetQuery.insertIntoEmission(pgname, url, 'Uploaded')
+                              const queryStr = await IngestionDatasetQuery.insertIntoEmission(pgname, url,jwtToken.split(' ')[1],'Uploaded')
                               const result = await this.databaseService.executeQuery(queryStr.query, queryStr.values)
+                              console.log("The result is:", result);
                               console.log(`Filtered data saved to ${fileName}`);
                            } catch (error) {
                               this.service.deleteLocalFile(fileName)
@@ -83,8 +96,9 @@ export class NvskApiService {
                         })
                      })
                      .on('error', async (error) => {
-                        const queryStr = await IngestionDatasetQuery.insertIntoEmission(pgname, url, error)
-                        const result = await this.databaseService.executeQuery(queryStr.query, queryStr.values)
+                        const queryStr = await IngestionDatasetQuery.insertIntoEmission(pgname, url,jwtToken.split(' ')[1], error)
+                        const result = await this.databaseService.executeQuery(queryStr.query, queryStr.values);
+                        
                         this.service.deleteLocalFile(fileName);
                         console.error('Error processing CSV:', error);
                      });
@@ -95,13 +109,15 @@ export class NvskApiService {
                let cronExpression = `0 ${dateResult[1]} ${dateResult[0]} * * ?`
                console.log("Cron expression is:", cronExpression);
                let url = `${process.env.SPEC_URL}` + '/schedule'
-               let body = {
+               let scheduleBody = {
                   "processor_group_name": "Run_adapters",
-                  "scheduled_at": `"${cronExpression}"`
+                  "scheduled_at": `${cronExpression}`
                }
-               let scheduleResult = await this.httpService.post(url, body)
-               if (scheduleResult?.data['code'] === 200) {
-                  return { code: 200, message: "successfully scheduled the adapters" }
+               console.log("The schedule body is:",scheduleBody)
+               let scheduleResult = await this.httpService.post(url, scheduleBody)
+               console.log('The scheudle result is:',scheduleResult?.data['message']);
+               if (scheduleResult.status === 200) {
+                  return { code: 200, message: scheduleResult?.['data']['message'] }
                } else {
                   return { code: 400, error: "Adapter schedule failed" }
                }

@@ -37,10 +37,10 @@ import {UpdateFileStatusService} from '../services/update-file-status/update-fil
 import {ApiConsumes, ApiTags} from '@nestjs/swagger';
 import {DatabaseService} from '../../database/database.service';
 import {DataEmissionService} from '../services/data-emission/data-emission.service';
-import {V4DataEmissionService} from "../services/v4-data-emission/v4-data-emission.service";
 import {JwtGuard} from '../../guards/jwt.guard';
 import * as jwt from 'jsonwebtoken';
 import { NvskApiService } from '../services/nvsk-api/nvsk-api.service';
+import { UploadDimensionFileService } from '../services/upload-dimension-file/upload-dimension-file.service';
 import { GrammarService } from '../services/grammar/grammar.service';
 import { GenericFunction } from '../services/generic-function';
 
@@ -71,11 +71,12 @@ export class IngestionController {
     constructor(
         private datasetService: DatasetService, private dimensionService: DimensionService
         , private eventService: EventService, private csvImportService: CsvImportService, private fileStatus: FileStatusService, private updateFileStatus: UpdateFileStatusService,
-        private databaseService: DatabaseService, private dataEmissionService: DataEmissionService, private v4DataEmissionService: V4DataEmissionService,
+        private databaseService: DatabaseService, private dataEmissionService: DataEmissionService,
         private rawDataImportService:RawDataImportService,
         private nvskService:NvskApiService,
         private grammarService: GrammarService,
-        private service: GenericFunction) {
+        private service: GenericFunction,
+        private uploadDimension:UploadDimensionFileService) {
     }
 
     @Get('generatejwt')
@@ -237,24 +238,23 @@ export class IngestionController {
     }
 
 
-    @Get('/v4-data-emission')
-    @UseGuards(JwtGuard)
+    @Get('/upload-dimension')
     async dataEmission(@Res()response: Response) {
         try {
-            const result: any = await this.v4DataEmissionService.uploadFiles();
+            const result: any = await this.uploadDimension.uploadFiles();
             if (result.code == 400) {
                 response.status(400).send({message: result.error});
             } else {
                 response.status(200).send({message: result.message});
             }
         } catch (e) {
-            console.error('ingestion.controller.v4dataEmission: ', e.message);
+            console.error('ingestion.controller.uploadDimensionFiles: ', e.message);
             throw new Error(e);
         }
     }
 
     @Post('/getRawData')
-    // @UseGuards(JwtGuard)
+    @UseGuards(JwtGuard)
     async getPresignedUrls(@Body() inputData: RawDataPullBody, @Res()response: Response){
         try {
 
@@ -265,10 +265,11 @@ export class IngestionController {
             throw new Error(e);
         }
     }
-    @Get('/data-emitter')
-    async fetchData(@Body()inputData: NvskApiService,@Res()response: Response){
+    @Post('/data-emitter')
+    @UseGuards(JwtGuard)
+    async fetchData(@Body()inputData:RawDataPullBody ,@Res()response: Response,@Req() request: Request){
         try {
-            const result: any = await this.nvskService.getEmitterData();
+            const result: any = await this.nvskService.getEmitterData(inputData?.program_names, request);
             console.log("result is", result);
             if (result?.code == 400) {
                 response.status(400).send({message: result.error});
