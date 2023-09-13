@@ -22,6 +22,9 @@ export class UploadDimensionFileService {
         const files = fs.readdirSync(folderPath);
         let promises = [];
         for(let i=0;i<files?.length;i++){
+            if(files[i]?.includes('.md')){
+                continue
+            }
             const filePath = folderPath + '/' +files[i]
             const fileName: string = files[i]?.split('-')[0]
             console.log("The file name is:", fileName)
