@@ -200,10 +200,10 @@ export class EventService {
     
     async createTelemetryEvent(inputData) {
         try {            
-            if (inputData.event_name) {
-                let eventName = inputData.event_name;
+            if (inputData?.event_name) {
+                let eventName = inputData?.event_name;
                 let queryStr = await IngestionDatasetQuery.getEvents(eventName);                
-                const queryResult = await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
+                const queryResult = await this.DatabaseService.executeQuery(queryStr?.query, queryStr?.values);
                 if (queryResult?.length === 1) {
                     let validArray = [], invalidArray = [];
                     if (inputData.event && inputData.event.length > 0) {
