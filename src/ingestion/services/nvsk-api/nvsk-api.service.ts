@@ -57,13 +57,13 @@ export class NvskApiService {
                      this.service.deleteLocalFile(fileName);
                   }
                   const stream = (await axios.get(url, { responseType: 'stream' })).data
-                  const filteredCsvStream = fs.createWriteStream(`${fileName}`, { awaitWriteFinish: true});
+                  const filteredCsvStream = fs.createWriteStream(`${fileName}`);
                   let isFirstRow = true;
                   stream
                      .pipe(csv({}))
-                     .on('data', async (row) => {
+                     .on('data',  (row) => {
                         if (isFirstRow) {
-                           await filteredCsvStream.write(Object.keys(row).join(',') + '\n');
+                           filteredCsvStream.write(Object.keys(row).join(',') + '\n');
                            isFirstRow = false;
                         }
                         if (row['state_code'].slice(1, -1) === process.env.STATE_ID) {
@@ -102,7 +102,7 @@ export class NvskApiService {
                         this.service.deleteLocalFile(fileName);
                         console.error('Error processing CSV:', error);
                      });
-                     if((urlData.indexOf(data) === urlData.length -1) && (data.urls.indexOf(url) === data.urls.length - 1)){
+                     if((urlData?.indexOf(data) === urlData?.length -1) && (data.urls?.indexOf(url) === data.urls?.length - 1)){
                        this.scheduleAdapters()
                      }
                }
