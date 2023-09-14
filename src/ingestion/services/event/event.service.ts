@@ -206,13 +206,13 @@ export class EventService {
                 const queryResult = await this.DatabaseService.executeQuery(queryStr?.query, queryStr?.values);
                 if (queryResult?.length === 1) {
                     let validArray = [], invalidArray = [];
-                    if (inputData.event && inputData.event.length > 0) {
+                    if (inputData?.event && inputData?.event.length > 0) {
                         for (let record of inputData.event) {                            
                             let schema = queryResult[0].schema;
                             validArray.push(await this.service.formatDataToCSVBySchema(record, schema));
                         }
                         let file;
-                        if (validArray.length > 0) {
+                        if (validArray?.length > 0) {
                             if(!inputData?.isTelemetryWritingEnd){
                                 file = `./emission-files/` + eventName + '.csv';
                                 await this.service.writeTelemetryToCSV(file, validArray);
@@ -226,34 +226,35 @@ export class EventService {
                         validArray = undefined;
                         return {
                             code: 200,
-                            message: "Event added successfully"
+                            message: "Event added to file successfully"
                         }
                     } else {
-                        return {
-                            code: 400,
-                            error: "Event array is required and cannot be empty"
+                        if(inputData?.isTelemetryWritingEnd){
+                            let filePath = `./emission-files/` + eventName + ".csv";
+                            let folderName = await this.service.getDate();
+                            if (process.env.STORAGE_TYPE === 'local') {
+                                await this.uploadService.uploadFiles('local', `${process.env.MINIO_BUCKET}`, filePath, `emission/${folderName}/`);
+                            } else if (process.env.STORAGE_TYPE === 'azure') {
+                                await this.uploadService.uploadFiles('azure', `${process.env.AZURE_CONTAINER}`, filePath, `emission/${folderName}/`);
+                            } else if (process.env.STORAGE_TYPE === 'oracle') {
+                                await this.uploadService.uploadFiles('oracle', `${process.env.ORACLE_BUCKET}`, filePath, `emission/${folderName}/`);
+                            } else {
+                                await this.uploadService.uploadFiles('aws', `${process.env.AWS_BUCKET}`, filePath, `emission/${folderName}/`);
+                            }                                
+                            // delete the file
+                            await this.service.deleteLocalFile(filePath)
+                            return {
+                                code: 200,
+                                message: "Event data uploaded successfully"
+                            }
                         }
+                        
                     }
                 }
                 else {
-                    if(inputData?.isTelemetryWritingEnd){
-                        let filePath = `./emission-files/` + eventName + ".csv";
-                        let folderName = await this.service.getDate();
-                        if (process.env.STORAGE_TYPE === 'local') {
-                            await this.uploadService.uploadFiles('local', `${process.env.MINIO_BUCKET}`, filePath, `emission/${folderName}/`);
-                        } else if (process.env.STORAGE_TYPE === 'azure') {
-                            await this.uploadService.uploadFiles('azure', `${process.env.AZURE_CONTAINER}`, filePath, `emission/${folderName}/`);
-                        } else if (process.env.STORAGE_TYPE === 'oracle') {
-                            await this.uploadService.uploadFiles('oracle', `${process.env.ORACLE_BUCKET}`, filePath, `emission/${folderName}/`);
-                        } else {
-                            await this.uploadService.uploadFiles('aws', `${process.env.AWS_BUCKET}`, filePath, `emission/${folderName}/`);
-                        }                                
-                        // delete the file
-                        await this.service.deleteLocalFile(filePath)
-                        return {
-                            code: 200,
-                            message: "Event data uploaded successfully"
-                        }
+                    return {
+                        code: 400,
+                        error: "No Event"
                     }
                 }
             } else {
