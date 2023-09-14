@@ -61,7 +61,7 @@ export class NvskApiService {
                   let isFirstRow = true;
                   stream
                      .pipe(csv({}))
-                     .on('data', (row) => {
+                     .on('data',  (row) => {
                         if (isFirstRow) {
                            filteredCsvStream.write(Object.keys(row).join(',') + '\n');
                            isFirstRow = false;
@@ -102,34 +102,36 @@ export class NvskApiService {
                         this.service.deleteLocalFile(fileName);
                         console.error('Error processing CSV:', error);
                      });
+                     if((urlData?.indexOf(data) === urlData?.length -1) && (data.urls?.indexOf(url) === data.urls?.length - 1)){
+                       this.scheduleAdapters()
+                     }
                }
+              
             }
-            try {
-               // let dateResult = await this.dateService.getCurrentTimeForCronSchedule()
-               // let cronExpression = `0 ${dateResult[1]} ${dateResult[0]} * * ?`
-               // console.log("Cron expression is:", cronExpression);
-               let url = `${process.env.SPEC_URL}` + '/schedule'
-               let scheduleBody = {
-                  "processor_group_name": "Run_adapters",
-                  "scheduled_at": "* 0/2 * * * ?"
-               }
-               console.log("The schedule body is:",scheduleBody)
-               let scheduleResult = await this.httpService.post(url, scheduleBody)
-               console.log('The scheudle result is:',scheduleResult?.data['message']);
-               if (scheduleResult.status === 200) {
-                  return { code: 200, message: scheduleResult?.['data']['message'] }
-               } else {
-                  return { code: 400, error: "Adapter schedule failed" }
-               }
-            } catch (err) {
-               console.log("error for adapters is:", err);
-            }
-
-
          }
+         
       } catch (error) {
          console.log("error is:", error);
       }
+   }
+   async scheduleAdapters(){   
+      try {
+         let url = `${process.env.SPEC_URL}` + '/schedule'
+         let scheduleBody = {
+            "processor_group_name": "Run_adapters",
+            "scheduled_at": "* 0/7 * * * ?"
+         }
+         let scheduleResult = await this.httpService.post(url, scheduleBody)
+         console.log('The schedule result is:',scheduleResult?.data['message']);
+         if (scheduleResult.status === 200) {
+            return { code: 200, message: scheduleResult?.['data']['message'] }
+         } else {
+            return { code: 400, error: "Adapter schedule failed" }
+         }
+      } catch (err) {
+         console.log("error for adapters is:", err);
+      }
+
    }
 }
 
