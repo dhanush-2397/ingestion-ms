@@ -196,5 +196,80 @@ export class EventService {
                 reject('No grammar found for the given id');
             }
         });
-    } 
+    }
+    
+    async createTelemetryEvent(inputData) {
+        try {            
+            if (inputData.event_name) {
+                let eventName = inputData.event_name;
+                let queryStr = await IngestionDatasetQuery.getEvents(eventName);                
+                const queryResult = await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
+                if (queryResult?.length === 1) {
+                    if(inputData?.isTelemetryWritingEnd){
+                        let filePath = `./emission-files/` + eventName + ".csv";
+                        let folderName = await this.service.getDate();
+                        if (process.env.STORAGE_TYPE === 'local') {
+                            await this.uploadService.uploadFiles('local', `${process.env.MINIO_BUCKET}`, filePath, `emission/${folderName}/`);
+                        } else if (process.env.STORAGE_TYPE === 'azure') {
+                            await this.uploadService.uploadFiles('azure', `${process.env.AZURE_CONTAINER}`, filePath, `emission/${folderName}/`);
+                        } else if (process.env.STORAGE_TYPE === 'oracle') {
+                            await this.uploadService.uploadFiles('oracle', `${process.env.ORACLE_BUCKET}`, filePath, `emission/${folderName}/`);
+                        } else {
+                            await this.uploadService.uploadFiles('aws', `${process.env.AWS_BUCKET}`, filePath, `emission/${folderName}/`);
+                        }                                
+                        // delete the file
+                        await this.service.deleteLocalFile(filePath)
+                        return {
+                            code: 200,
+                            message: "Event data uploaded successfully"
+                        }
+                    }
+
+                    let validArray = [], invalidArray = [];
+                    if (inputData.event && inputData.event.length > 0) {
+                        for (let record of inputData.event) {                            
+                            let schema = queryResult[0].schema;
+                            validArray.push(await this.service.formatDataToCSVBySchema(record, schema));
+                        }
+                        let file;
+                        if (validArray.length > 0) {
+                            if(!inputData?.isTelemetryWritingEnd){
+                                file = `./emission-files/` + eventName + '.csv';
+                                await this.service.writeTelemetryToCSV(file, validArray);
+                            }
+                        }
+                        
+                        queryStr = await IngestionDatasetQuery.updateTotalCounter(inputData.file_tracker_pid);
+                        await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
+
+                        invalidArray = undefined;
+                        validArray = undefined;
+                        return {
+                            code: 200,
+                            message: "Event added successfully"
+                        }
+                    } else {
+                        return {
+                            code: 400,
+                            error: "Event array is required and cannot be empty"
+                        }
+                    }
+                }
+                else {
+                    return {
+                        code: 400,
+                        error: "No event found"
+                    }
+                }
+            } else {
+                return {
+                    code: 400,
+                    error: "Event name is missing"
+                }
+            }
+        } catch (e) {
+            console.error('create-event-impl.executeQueryAndReturnResults: ', e.message);
+            throw new Error(e);
+        }
+    }
 }
