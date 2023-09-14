@@ -158,6 +158,24 @@ export class IngestionController {
         }
     }
 
+    @Post('/telemetryEvent')
+    @UseGuards(JwtGuard)
+    async createTelemetryEvent(@Body() inputData: IEvent, @Res()response: Response){
+        try {
+            let result: Result = await this.eventService.createTelemetryEvent(inputData);
+            if (result.code == 400) {
+                response.status(400).send({"message": result.error});
+            } else {
+                response.status(200).send({
+                    "message": result.message, invalid_record_count: result.errorCounter,
+                    valid_record_count: result.validCounter
+                });
+            }
+        } catch (error) {
+            
+        }
+    }
+
     @UseInterceptors(FileInterceptor('file', {
         storage: diskStorage({
             destination: './files',
