@@ -205,26 +205,6 @@ export class EventService {
                 let queryStr = await IngestionDatasetQuery.getEvents(eventName);                
                 const queryResult = await this.DatabaseService.executeQuery(queryStr.query, queryStr.values);
                 if (queryResult?.length === 1) {
-                    if(inputData?.isTelemetryWritingEnd){
-                        let filePath = `./emission-files/` + eventName + ".csv";
-                        let folderName = await this.service.getDate();
-                        if (process.env.STORAGE_TYPE === 'local') {
-                            await this.uploadService.uploadFiles('local', `${process.env.MINIO_BUCKET}`, filePath, `emission/${folderName}/`);
-                        } else if (process.env.STORAGE_TYPE === 'azure') {
-                            await this.uploadService.uploadFiles('azure', `${process.env.AZURE_CONTAINER}`, filePath, `emission/${folderName}/`);
-                        } else if (process.env.STORAGE_TYPE === 'oracle') {
-                            await this.uploadService.uploadFiles('oracle', `${process.env.ORACLE_BUCKET}`, filePath, `emission/${folderName}/`);
-                        } else {
-                            await this.uploadService.uploadFiles('aws', `${process.env.AWS_BUCKET}`, filePath, `emission/${folderName}/`);
-                        }                                
-                        // delete the file
-                        await this.service.deleteLocalFile(filePath)
-                        return {
-                            code: 200,
-                            message: "Event data uploaded successfully"
-                        }
-                    }
-
                     let validArray = [], invalidArray = [];
                     if (inputData.event && inputData.event.length > 0) {
                         for (let record of inputData.event) {                            
@@ -256,9 +236,24 @@ export class EventService {
                     }
                 }
                 else {
-                    return {
-                        code: 400,
-                        error: "No event found"
+                    if(inputData?.isTelemetryWritingEnd){
+                        let filePath = `./emission-files/` + eventName + ".csv";
+                        let folderName = await this.service.getDate();
+                        if (process.env.STORAGE_TYPE === 'local') {
+                            await this.uploadService.uploadFiles('local', `${process.env.MINIO_BUCKET}`, filePath, `emission/${folderName}/`);
+                        } else if (process.env.STORAGE_TYPE === 'azure') {
+                            await this.uploadService.uploadFiles('azure', `${process.env.AZURE_CONTAINER}`, filePath, `emission/${folderName}/`);
+                        } else if (process.env.STORAGE_TYPE === 'oracle') {
+                            await this.uploadService.uploadFiles('oracle', `${process.env.ORACLE_BUCKET}`, filePath, `emission/${folderName}/`);
+                        } else {
+                            await this.uploadService.uploadFiles('aws', `${process.env.AWS_BUCKET}`, filePath, `emission/${folderName}/`);
+                        }                                
+                        // delete the file
+                        await this.service.deleteLocalFile(filePath)
+                        return {
+                            code: 200,
+                            message: "Event data uploaded successfully"
+                        }
                     }
                 }
             } else {
