@@ -61,7 +61,6 @@ export class NvskApiService {
         };
       }
       this.writeRawDataFromUrl(urlData, headers.Authorization);
-      this.scheduleAdapters()
       return { code: 200, message: "VSK Writing to the file in process" };
     } catch (error) {
       return { code: 400, errorMsg: error };
